@@ -1,20 +1,27 @@
 from django.shortcuts import render ,redirect
-from django.contrib.auth.models import User 
 from django.contrib.auth import authenticate , login, logout
-from .models import Profile, Post
+from .models import Post , User ,LikePost
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # Create your views here.
 
 @login_required(login_url='signin')
 def index(request):
-    user_profile = Profile.objects.get(user=request.user)
-    return render(request,'index.html',{'user_profile':user_profile})
+    user_profile = User.objects.get(id=request.user.id)
+    posts = Post.objects.all().order_by('-created_at')
+    likes = LikePost.objects.all()
+    context = {
+        'user_profile':user_profile,
+        'posts': posts,
+        'likes': likes,
+
+    }
+    return render(request,'index.html',context)
 
 @login_required(login_url='signin')
 def upload(request):
     if request.method == 'POST':
-        user = request.user.username
+        user = request.user
         image = request.FILES.get('image_upload')
         caption = request.POST['caption']
 
@@ -24,17 +31,37 @@ def upload(request):
     else:
         return redirect('index')
 
+def like_post(request,pk):
+    user = request.user 
+    post = Post.objects.get(id=pk) 
+    like_filter = LikePost.objects.filter(post=post,user=user).first()
+
+    if like_filter == None:
+        new_like = LikePost.objects.create(post=post,user=user)
+        new_like.save()
+        post.no_of_likes = post.no_of_likes+1
+        post.save()
+        return redirect('index')
+    else:
+        like_filter.delete()
+        post.no_of_likes = post.no_of_likes-1
+        post.save()
+        return redirect('index')
+
+def profile(request):
+    
+    return render(request,'profile.html')
 
 @login_required(login_url='signin')
 def settings(request):
-    user_profile = Profile.objects.get(user=request.user)
+    user_profile = User.objects.get(id=request.user.id)
     if request.method == 'POST':
         if request.FILES.get('image') == None:
-            image = user_profile.profileimg
+            image = user_profile.avatar
             bio = request.POST['bio']
             location = request.POST['location']
 
-            user_profile.profileimg = image
+            user_profile.avatar = image
             user_profile.bio = bio
             user_profile.location = location
             user_profile.save()
@@ -43,7 +70,7 @@ def settings(request):
             bio = request.POST['bio']
             location = request.POST['location']
 
-            user_profile.profileimg = image
+            user_profile.avatar = image
             user_profile.bio = bio
             user_profile.location = location
             user_profile.save()
@@ -73,9 +100,6 @@ def signup(request):
                 user = User.objects.create_user(username=username,email=email,password=password)
                 user.save()
 
-                user_model = User.objects.get(username=username)
-                new_profile = Profile.objects.create(user=user_model, id_user=user_model.id)
-                new_profile.save()
                 return redirect('signup')
         else:
             messages.info(request, 'Password Not Matching')
