@@ -8,7 +8,7 @@
                     <div class="d-flex justify-content-between bg-white rounded-top align-items-center p-3 ">
                             <div class="d-flex justify-content-center rounded-top align-items-center grid gap-2">
                                 <img src="{{post.user.avatar.url}}" class="rounded-circle" width="35" height="35" alt="">
-                                <span><a href="" class="text-decoration-none text-dark">@{{post.user}}</a></span>
+                                <span><a href="{% url 'profile' post.user.id %}" class="text-decoration-none text-dark">@{{post.user}}</a></span>
                             </div>
                             <div>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots mb-1" viewBox="0 0 16 16">

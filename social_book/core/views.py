@@ -48,9 +48,16 @@ def like_post(request,pk):
         post.save()
         return redirect('index')
 
-def profile(request):
-    
-    return render(request,'profile.html')
+def profile(request,pk):
+    user_id = User.objects.get(id=pk)
+    user_posts = Post.objects.filter(user__id=pk)
+    likes = LikePost.objects.all()
+    context = {
+        'user_id':user_id,
+        'user_posts':user_posts,
+        'likes':likes
+    }
+    return render(request,'profile.html',context)
 
 @login_required(login_url='signin')
 def settings(request):
@@ -74,7 +81,7 @@ def settings(request):
             user_profile.bio = bio
             user_profile.location = location
             user_profile.save()
-
+            
         return redirect('settings')
     content = { 
         'user_profile': user_profile
