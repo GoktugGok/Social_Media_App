@@ -8,7 +8,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True,null=True)
     bio = models.TextField(null=True)
     location = models.CharField(max_length=100,blank=True)
-    avatar = models.ImageField(null=True,default="avatar.png")
+    avatar = models.ImageField(upload_to="profile_images", null=True,default="avatar.png")
+    backgroundImage = models.ImageField(upload_to="background", null=True,default="windows-xp-wallpaper-bliss_T5gheWz.jpg")
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']

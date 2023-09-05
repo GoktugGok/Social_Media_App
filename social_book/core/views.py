@@ -64,19 +64,24 @@ def settings(request):
     user_profile = User.objects.get(id=request.user.id)
     if request.method == 'POST':
         if request.FILES.get('image') == None:
+            backgroundImage = request.FILES.get('backgroundImage')
             image = user_profile.avatar
             bio = request.POST['bio']
             location = request.POST['location']
 
+            user_profile.backgroundImage = backgroundImage
             user_profile.avatar = image
             user_profile.bio = bio
             user_profile.location = location
             user_profile.save()
         if request.FILES.get('image') != None:
+
+            backgroundImage = user_profile.backgroundImage
             image = request.FILES.get('image')
             bio = request.POST['bio']
             location = request.POST['location']
 
+            user_profile.backgroundImage = backgroundImage
             user_profile.avatar = image
             user_profile.bio = bio
             user_profile.location = location
