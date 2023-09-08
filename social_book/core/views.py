@@ -1,5 +1,6 @@
 from django.shortcuts import render ,redirect
 from django.contrib.auth import authenticate , login, logout
+from django.db.models import Q
 from .models import Post , User ,LikePost
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -8,10 +9,12 @@ from django.contrib import messages
 @login_required(login_url='signin')
 def index(request):
     user_profile = User.objects.get(id=request.user.id)
+    all_users = User.objects.all()[:5]
     posts = Post.objects.all().order_by('-created_at')
     likes = LikePost.objects.all()
     context = {
         'user_profile':user_profile,
+        'all_users':all_users,
         'posts': posts,
         'likes': likes,
 
@@ -50,7 +53,7 @@ def like_post(request,pk):
 
 def profile(request,pk):
     user_id = User.objects.get(id=pk)
-    user_posts = Post.objects.filter(user__id=pk)
+    user_posts = Post.objects.filter(user__id=pk).order_by("-created_at")
     likes = LikePost.objects.all()
     context = {
         'user_id':user_id,
@@ -58,6 +61,18 @@ def profile(request,pk):
         'likes':likes
     }
     return render(request,'profile.html',context)
+
+def search(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    user_profile = User.objects.get(id=request.user.id)
+    users_filter = User.objects.all().filter(Q(username__icontains  = q)|
+                                      Q(id__icontains  = q)
+                                      )
+    context = {
+        'user_profile':user_profile,
+        'users_filter':users_filter,
+    }
+    return render(request,'search.html',context)
 
 @login_required(login_url='signin')
 def settings(request):
