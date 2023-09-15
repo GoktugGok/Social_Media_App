@@ -1,20 +1,30 @@
-from django.shortcuts import render ,redirect
+from django.shortcuts import render ,redirect , get_object_or_404
 from django.contrib.auth import authenticate , login, logout
 from django.db.models import Q
-from .models import Post , User ,LikePost
+from .models import Post , Users ,LikePost ,Follow
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # Create your views here.
 
 @login_required(login_url='signin')
 def index(request):
-    user_profile = User.objects.get(id=request.user.id)
-    all_users = User.objects.all()[:5]
+    user_profile = Users.objects.get(id=request.user.id)
+
+    # Mevcut kullanıcının takip ettiği kullanıcıları alın
+    takip_ettiklerim = Follow.objects.filter(following=request.user).values_list('followed', flat=True)
+    takip_ettiklerim_kullanicilar = Users.objects.filter(id__in=takip_ettiklerim)
+    print(takip_ettiklerim_kullanicilar)
+
+    tum_kullanicilar = Users.objects.exclude(id=request.user.id)
+    print(tum_kullanicilar)
+    takip_etmediklerim = [kullanici for kullanici in tum_kullanicilar if kullanici not in takip_ettiklerim_kullanicilar]
+    print(takip_etmediklerim)
+
     posts = Post.objects.all().order_by('-created_at')
     likes = LikePost.objects.all()
     context = {
         'user_profile':user_profile,
-        'all_users':all_users,
+        'takip_etmediklerim':takip_etmediklerim,
         'posts': posts,
         'likes': likes,
 
@@ -51,12 +61,32 @@ def like_post(request,pk):
         post.save()
         return redirect('index')
 
+def follow(request, pk):
+    user_to_follow = get_object_or_404(Users, pk=pk)
+    user_profile = request.user
+
+    if user_profile != user_to_follow: 
+        follow_instance, created = Follow.objects.get_or_create(following=user_profile)
+
+        if follow_instance.is_following(user_to_follow):
+            follow_instance.followed.remove(user_to_follow)
+        else:
+            follow_instance.followed.add(user_to_follow)
+
+    return redirect('profile',user_to_follow.id)
+
 def profile(request,pk):
-    user_id = User.objects.get(id=pk)
+    user_id = Users.objects.get(id=pk)
     user_posts = Post.objects.filter(user__id=pk).order_by("-created_at")
     likes = LikePost.objects.all()
+    follow_filter = Follow.objects.filter(followed=user_id,following=request.user).first()
+    followed_all = Follow.objects.filter(followed=user_id)
+    following_all = Follow.objects.filter(following=user_id)
     context = {
         'user_id':user_id,
+        'follow_filter':follow_filter,
+        'followed_all':followed_all,
+        'following_all':following_all,
         'user_posts':user_posts,
         'likes':likes
     }
@@ -64,8 +94,8 @@ def profile(request,pk):
 
 def search(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
-    user_profile = User.objects.get(id=request.user.id)
-    users_filter = User.objects.all().filter(Q(username__icontains  = q)|
+    user_profile = Users.objects.get(id=request.user.id)
+    users_filter = Users.objects.all().filter(Q(username__icontains  = q)|
                                       Q(id__icontains  = q)
                                       )
     context = {
@@ -76,10 +106,14 @@ def search(request):
 
 @login_required(login_url='signin')
 def settings(request):
-    user_profile = User.objects.get(id=request.user.id)
+    user_profile = Users.objects.get(id=request.user.id)
     if request.method == 'POST':
+        print()
         if request.FILES.get('image') == None:
-            backgroundImage = request.FILES.get('backgroundImage')
+            if request.FILES.get('backgroundImage') == None:
+                backgroundImage = user_profile.backgroundImage
+            else:
+                backgroundImage = request.FILES.get('backgroundImage')
             image = user_profile.avatar
             bio = request.POST['bio']
             location = request.POST['location']
@@ -90,8 +124,10 @@ def settings(request):
             user_profile.location = location
             user_profile.save()
         if request.FILES.get('image') != None:
-
-            backgroundImage = user_profile.backgroundImage
+            if request.FILES.get('backgroundImage') == None:
+                backgroundImage = user_profile.backgroundImage
+            else:
+                backgroundImage = request.FILES.get('backgroundImage')
             image = request.FILES.get('image')
             bio = request.POST['bio']
             location = request.POST['location']
@@ -116,15 +152,15 @@ def signup(request):
         password2 = request.POST['password2']
 
         if password == password2:
-            if User.objects.filter(email=email).exists():
+            if Users.objects.filter(email=email).exists():
                 messages.info(request, 'Email Taken')
                 return redirect('signup')
             
-            elif User.objects.filter(username=username).exists():
+            elif Users.objects.filter(username=username).exists():
                 messages.info(request, 'Username Taken')
                 return redirect('signup')
             else:
-                user = User.objects.create_user(username=username,email=email,password=password)
+                user = Users.objects.create_user(username=username,email=email,password=password)
                 user.save()
 
                 return redirect('signup')
