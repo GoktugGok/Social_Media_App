@@ -22,8 +22,8 @@
         <div class="col-md-9 col-12 ">
           <ul class="d-flex grid gap-0 column-gap-3 align-items-center justify-content-end text-light me-3" style="list-style-type:none;">
             <li class="fs-5">{{user_posts.count}} Post</li>
-            <li class="fs-5">{{followed_all.count}} followed</li>
-            <li class="fs-5">{{following_all.count}} following</li>
+            <li class="fs-5">{{followed_count}} followed</li>
+            <li class="fs-5">{{following_count}} following</li>
             <li class="">
               {% if request.user.id != user_id.id%}
               <a href="{% url 'follow' user_id.id %}" class="text-decoration-none text-light">{% if follow_filter %} <h5 class="fs-6 ms-2 btn bg-info text-light">following</h5> {% else %} <h5 class="fs-6 ms-2 btn bg-danger text-light">follow</h5> {% endif%} </a>

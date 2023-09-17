@@ -13,12 +13,17 @@ def index(request):
     # Mevcut kullanıcının takip ettiği kullanıcıları alın
     takip_ettiklerim = Follow.objects.filter(following=request.user).values_list('followed', flat=True)
     takip_ettiklerim_kullanicilar = Users.objects.filter(id__in=takip_ettiklerim)
-    print(takip_ettiklerim_kullanicilar)
+
 
     tum_kullanicilar = Users.objects.exclude(id=request.user.id)
-    print(tum_kullanicilar)
-    takip_etmediklerim = [kullanici for kullanici in tum_kullanicilar if kullanici not in takip_ettiklerim_kullanicilar]
-    print(takip_etmediklerim)
+    
+    takip_etmediklerim = []
+
+    for kullanici in tum_kullanicilar:
+        if kullanici not in takip_ettiklerim_kullanicilar:
+            print(kullanici)
+            takipci_sayisi = Follow.objects.filter(followed=kullanici).count()
+            takip_etmediklerim.append({'kullanici': kullanici, 'takipci_sayisi': takipci_sayisi})
 
     posts = Post.objects.all().order_by('-created_at')
     likes = LikePost.objects.all()
@@ -73,20 +78,32 @@ def follow(request, pk):
         else:
             follow_instance.followed.add(user_to_follow)
 
+
     return redirect('profile',user_to_follow.id)
 
 def profile(request,pk):
     user_id = Users.objects.get(id=pk)
     user_posts = Post.objects.filter(user__id=pk).order_by("-created_at")
     likes = LikePost.objects.all()
+
+    # takip eden kişilerin sayısı
+    followed_count = user_id.followed.all().count()
+
+    
+    # takip edip etmediğini kontrol ediyor
     follow_filter = Follow.objects.filter(followed=user_id,following=request.user).first()
-    followed_all = Follow.objects.filter(followed=user_id)
-    following_all = Follow.objects.filter(following=user_id)
+
+    # takip ettiklerinin sayısı
+    following_counts = Follow.objects.filter(following=user_id)
+    following_count = 0
+    for follower in following_counts:
+        following_count += follower.followed.count()
+
     context = {
         'user_id':user_id,
         'follow_filter':follow_filter,
-        'followed_all':followed_all,
-        'following_all':following_all,
+        'followed_count':followed_count,
+        'following_count':following_count,
         'user_posts':user_posts,
         'likes':likes
     }

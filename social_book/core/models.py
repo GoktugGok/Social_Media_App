@@ -11,10 +11,13 @@ class Users(AbstractUser):
     location = models.CharField(max_length=100,blank=True)
     avatar = models.ImageField(upload_to="profile_images", null=True,default="avatar.png")
     backgroundImage = models.ImageField(upload_to="background", null=True,default="windows-xp-wallpaper-bliss_T5gheWz.jpg")
-    followers = models.ManyToManyField("self", blank=True)
+    
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
+
+    def follower_count(self):
+        return self.followers.count()
 
 class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -45,6 +48,7 @@ class Follow(models.Model):
     
     def is_following(self, user_to_check):
         return self.followed.filter(id=user_to_check.id).exists()
+    
     
 
     
