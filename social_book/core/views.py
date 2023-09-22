@@ -1,8 +1,9 @@
 from django.shortcuts import render ,redirect , get_object_or_404
 from django.contrib.auth import authenticate , login, logout
 from django.db.models import Q
-from .models import Post , Users ,LikePost ,Follow
+from .models import Post , Users ,LikePost ,Follow, CommentPost
 from django.contrib.auth.decorators import login_required
+from uuid import UUID
 from django.contrib import messages
 # Create your views here.
 
@@ -21,7 +22,6 @@ def index(request):
 
     for kullanici in tum_kullanicilar:
         if kullanici not in takip_ettiklerim_kullanicilar:
-            print(kullanici)
             takipci_sayisi = Follow.objects.filter(followed=kullanici).count()
             takip_etmediklerim.append({'kullanici': kullanici, 'takipci_sayisi': takipci_sayisi})
 
@@ -49,23 +49,39 @@ def upload(request):
     else:
         return redirect('index')
 
+def comment(request):
+    if request.method == 'POST':
+        post_id = request.POST.get('post')
+        user = request.user
+        comment = request.POST['comment'].strip()
+
+        if comment:
+            post = Post.objects.get(id=post_id)
+            new_comment = CommentPost.objects.create(post=post,user=user,comment=comment)
+            new_comment.save()
+        return redirect('index')
+    else:
+        return redirect('index')
+
+@login_required(login_url='signin')
 def like_post(request,pk):
     user = request.user 
     post = Post.objects.get(id=pk) 
     like_filter = LikePost.objects.filter(post=post,user=user).first()
 
-    if like_filter == None:
+    if like_filter is None:
         new_like = LikePost.objects.create(post=post,user=user)
         new_like.save()
-        post.no_of_likes = post.no_of_likes+1
+        post.people_who_liked.add(user)
         post.save()
         return redirect('index')
     else:
         like_filter.delete()
-        post.no_of_likes = post.no_of_likes-1
+        post.people_who_liked.remove(user)
         post.save()
         return redirect('index')
 
+@login_required(login_url='signin')
 def follow(request, pk):
     user_to_follow = get_object_or_404(Users, pk=pk)
     user_profile = request.user
@@ -81,6 +97,7 @@ def follow(request, pk):
 
     return redirect('profile',user_to_follow.id)
 
+@login_required(login_url='signin')
 def profile(request,pk):
     user_id = Users.objects.get(id=pk)
     user_posts = Post.objects.filter(user__id=pk).order_by("-created_at")
@@ -94,10 +111,11 @@ def profile(request,pk):
     follow_filter = Follow.objects.filter(followed=user_id,following=request.user).first()
 
     # takip ettiklerinin sayısı
-    following_counts = Follow.objects.filter(following=user_id)
-    following_count = 0
-    for follower in following_counts:
-        following_count += follower.followed.count()
+    following_counts = Follow.objects.filter(following=user_id).first()
+    if following_counts == None:
+        following_count = 0
+    else:
+        following_count = following_counts.followed.count()
 
     context = {
         'user_id':user_id,
@@ -109,6 +127,7 @@ def profile(request,pk):
     }
     return render(request,'profile.html',context)
 
+@login_required(login_url='signin')
 def search(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
     user_profile = Users.objects.get(id=request.user.id)
@@ -161,6 +180,7 @@ def settings(request):
     }
     return render(request,'settings.html',content)
 
+
 def signup(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -187,6 +207,7 @@ def signup(request):
 
     return render(request,'signup.html')
 
+
 def signin(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -201,7 +222,7 @@ def signin(request):
     else:
         return render(request,'signin.html')
 
-@login_required(login_url='signin')
+
 def Logout(request):
     logout(request)
     return redirect('signin')

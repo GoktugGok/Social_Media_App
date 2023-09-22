@@ -18,14 +18,31 @@ class Users(AbstractUser):
 
     def follower_count(self):
         return self.followers.count()
+    
+class CommentPost(models.Model):
+    post = models.ForeignKey('Post', on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    comment = models.TextField(blank=False)
+    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-updated','-created']
+
+    def __str__(self):
+        return self.user.username
+    
+    
+    
 class Post(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     user = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)
     image = models.ImageField(upload_to="post_images")
     caption = models.TextField()
     created_at = models.DateTimeField(default=datetime.now)
-    no_of_likes = models.IntegerField(default=0)
+    people_who_liked = models.ManyToManyField(Users,related_name='People_who_liked',blank=True)
+    comments = models.ManyToManyField(CommentPost, related_name='comments', blank=True)
+
+    #no_of_likes = models.IntegerField(default=0)
 
     def __str__(self):
         return self.user.username
@@ -37,7 +54,7 @@ class LikePost(models.Model):
 
     def __str__(self):
         return self.user.username
-    
+     
 class Follow(models.Model):
     following = models.OneToOneField(Users, related_name='following',on_delete=models.CASCADE)
     followed = models.ManyToManyField(Users,related_name='followed',blank=True)
