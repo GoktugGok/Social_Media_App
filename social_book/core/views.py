@@ -156,7 +156,7 @@ def profile(request,pk):
 
     takip_ettiklerim = Follow.objects.filter(following=request.user).values_list('followed', flat=True)
     takip_ettiklerim_kullanicilar = Users.objects.filter(id__in=takip_ettiklerim)
-    print(user_id)
+    print(user_id,'asdad')
     print(takip_ettiklerim_kullanicilar)
     if user_id in takip_ettiklerim_kullanicilar:
         print('sadas')
