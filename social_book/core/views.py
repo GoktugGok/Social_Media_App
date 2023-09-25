@@ -1,7 +1,7 @@
 from django.shortcuts import render ,redirect , get_object_or_404
 from django.contrib.auth import authenticate , login, logout
 from django.db.models import Q
-from .models import Post , Users ,LikePost ,Follow, CommentPost
+from .models import Post , Users ,LikePost ,Follow, CommentPost, Chats
 from django.contrib.auth.decorators import login_required
 from uuid import UUID
 from django.contrib import messages
@@ -57,10 +57,24 @@ def comment(request):
 
         if comment:
             post = Post.objects.get(id=post_id)
-            new_comment = CommentPost.objects.create(post=post,user=user,comment=comment)
+            new_comment = CommentPost.objects.create(post=post, user=user, comment=comment)
             new_comment.save()
-        return redirect('index')
+            return redirect('index')
     else:
+        return redirect('index')
+    
+def comment_delete(request,pk):
+    comment_id = CommentPost.objects.get(id=pk)
+
+    if comment_id:
+        comment_id.delete()
+        return redirect('index')
+
+def post_delete(request,pk):
+    post_id = Post.objects.get(id=pk)
+
+    if post_id:
+        post_id.delete()
         return redirect('index')
 
 @login_required(login_url='signin')
@@ -98,11 +112,54 @@ def follow(request, pk):
     return redirect('profile',user_to_follow.id)
 
 @login_required(login_url='signin')
+def chat(request):
+    user_profile = request.user
+
+    takip_ettiklerim = Follow.objects.filter(following=request.user).values_list('followed', flat=True)
+    takip_ettiklerim_kullanicilar = Users.objects.filter(id__in=takip_ettiklerim)
+
+    context = {
+        'user_profile':user_profile,
+        'takip_ettiklerim_kullanicilar':takip_ettiklerim_kullanicilar,
+    }
+    return render(request,'chat.html',context)
+
+@login_required(login_url='signin')
+def chat_user(request,pk):
+    user_profile = request.user
+    chat_user = Users.objects.get(id=pk)
+
+    chats = Chats.objects.filter(Q(user1=request.user, user2=chat_user) | Q(user1=chat_user, user2=request.user)).order_by('created')
+
+    
+    if request.method == 'POST':
+        firstUser = request.user
+        lastUser = chat_user
+        chat = request.POST['chat']
+
+        new_chat = Chats.objects.create(user1=firstUser,user2=lastUser,chat=chat)
+        new_chat.save()
+        return redirect('chat-user', pk )
+
+    context = {
+        'user_profile':user_profile,
+        'chat_user':chat_user,
+        'chats':chats
+    }
+    return render(request,'chat-user.html',context)
+
+@login_required(login_url='signin')
 def profile(request,pk):
     user_id = Users.objects.get(id=pk)
     user_posts = Post.objects.filter(user__id=pk).order_by("-created_at")
     likes = LikePost.objects.all()
 
+    takip_ettiklerim = Follow.objects.filter(following=request.user).values_list('followed', flat=True)
+    takip_ettiklerim_kullanicilar = Users.objects.filter(id__in=takip_ettiklerim)
+    print(user_id)
+    print(takip_ettiklerim_kullanicilar)
+    if user_id in takip_ettiklerim_kullanicilar:
+        print('sadas')
     # takip eden kişilerin sayısı
     followed_count = user_id.followed.all().count()
 
@@ -122,6 +179,7 @@ def profile(request,pk):
         'follow_filter':follow_filter,
         'followed_count':followed_count,
         'following_count':following_count,
+        'takip_ettiklerim_kullanicilar':takip_ettiklerim_kullanicilar,
         'user_posts':user_posts,
         'likes':likes
     }

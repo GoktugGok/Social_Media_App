@@ -19,6 +19,7 @@
 }
   </style>
   <body class="bg-secondary">
+
     <div class="container-fluid">
       <div class="row  d-flex align-items-end b-3" style="height: 350px; background: url({{user_id.backgroundImage.url}});">
         <div class="  mt-1 ">
@@ -53,21 +54,35 @@
         <div class="btn btn-light " data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="@fat">Update Pics</div>
       </div>
       {% endif %}
+      {% if request.user == user_id %}
+      {% endif %}
+      {% if user_id in takip_ettiklerim_kullanicilar %}
       <div class="d-flex mt-4 justify-content-center">
-         <div class="container-fluid">
+        <div class="container-fluid">
             <div class="row d-flex ">
               {% for user_post in user_posts %}
               <div class="col-lg-4 col-md-6  col-xl-4 d-flex justify-content-center p-2" >
                 <div class="card" style=" width: 400px;" >
                   <img src="{{user_post.image.url}}" style="height:310px; " class="card-img-top" alt="...">
                   <div class="card-body">
-                    <p class="" style="height: 20px;">{{user_post.caption}}</p>
+                    <div class="d-flex " style="width: 100%;">
+                        <p class="" style="width: 100%;">{{user_post.caption}}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                    </div>
                     <hr>
-                    <div class="d-flex">
-                      {% if user_post.no_of_likes == 0 %}
-                        <p>No likes</p>
-                      {% else %}
-                        <p class="m-0 ps-2 pb-2 ms-1 ms-auto">{{user_post.people_who_liked.all.count}}<i class="bi bi-suit-heart-fill text-danger ps-1 "></i></p>
+                    <div class="d-flex justify-content-between align-content-center py-2">
+                      <div>
+                        {% if user_post.no_of_likes == 0 %}
+                          <p>No likes</p>
+                        {% else %}
+                          <p class="m-0 ps-2 pb-2 ms-1 ms-auto">{{user_post.people_who_liked.all.count}}<i class="bi bi-suit-heart-fill text-danger ps-1 "></i></p>
+                        {% endif %}
+                      </div>
+                      {% if request.user == user_post.user %}
+                        <div class="">
+                          <a href="{% url 'post-delete' user_post.id %}" class="rounded bg-dark p-2" >
+                            <i class="bi bi-trash3-fill text-light "></i>
+                          </a>
+                        </div>
                       {% endif %}
                     </div>
                     <div>
@@ -81,10 +96,9 @@
                                     <p style="word-break: break-word;display: inline-block;" class="pb-1">{{comment.comment}}</p>
                                 </div>
                                 <div class="d-flex ms-2">
-                                    {% if request.user == comment.user %}
-                                        <i class="bi bi-trash3-fill text-danger me-1"></i>
-                                        <i class="bi bi-pencil-fill text-warning me-1"></i>
-                                    {% endif %}
+                                  {% if request.user == comment.user %}
+                                    <a href="{% url 'comment-delete' comment.id %}"><i class="bi bi-trash3-fill text-danger me-1"></i></a>
+                                  {% endif %}
                                 </div>
                             </div>
                         {% endfor %}
@@ -97,8 +111,13 @@
               </div>
               {% endfor %}
           </div>
-         </div>
+        </div>
       </div>
+      {% else %}
+      <div class="bg-light d-flex align-items-center justify-content-center" style="height: 100%;">
+        <h1 class="">Follow to see posts</h1>
+      </div>
+      {% endif %}
     </div>
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog">

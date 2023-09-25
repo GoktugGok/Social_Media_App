@@ -1,0 +1,21 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+
+    <div class="d-flex justify-content-center align-content-center mt-5">
+
+        <div class="col-md-6 col-12   ">
+            <ul class="list-unstyled">
+                {% for kullanıcı in takip_ettiklerim_kullanicilar %}
+                    <li class="bg-light border-start border-3 border-dark shadow rounded mb-3" style="background-image: url({{kullanıcı.backgroundImage.url}});" >
+                        <a href="{% url 'chat-user' kullanıcı.id %}" class="py-2 d-flex text-decoration-none text-dark align-items-center" >
+                            <img src="{{kullanıcı.avatar.url}}" alt="" style="height: 30px; width: 30px;" class="rounded mx-2" >
+                            <div class="text-light" style="text-shadow: #FC0 1px 0 10px;">{{kullanıcı.username}}</div>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+{% endblock  %}

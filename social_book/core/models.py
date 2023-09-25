@@ -2,6 +2,7 @@ from django.db import models
 import uuid
 from datetime import datetime
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 
 
 class Users(AbstractUser):
@@ -32,7 +33,18 @@ class CommentPost(models.Model):
     def __str__(self):
         return self.user.username
     
-    
+class Chats(models.Model):
+    user1 = models.ForeignKey(Users, related_name='chat_user1' ,on_delete=models.CASCADE)
+    user2 = models.ForeignKey(Users, related_name='chat_user2', on_delete=models.CASCADE)
+    chat = models.TextField()
+    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-updated','-created']
+
+    def __str__(self):
+        return self.user1.username
     
 class Post(models.Model):
     user = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)
