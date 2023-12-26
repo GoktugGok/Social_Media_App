@@ -1,0 +1,29 @@
+{% extends 'main.html' %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-12 col-lg-6 mt-3">
+                {% if users_filter.all.count == 0 %}
+                    <div class="alert alert-danger">
+                        there is no such user
+                    </div>    
+                {% else %}
+                    {% for user_filter in users_filter %}
+                            
+                        <a href="{% url 'profile' user_filter.id %}" class="text-decoration-none text-dark" >
+                            <div class="mt-3 p-2 bg-light d-flex align-items-center">
+                                <div><img src="{{user_filter.avatar.url}}" style="height: 100px; width: 100px;" class="img-fluid" alt=""></div>
+                                <div class="ms-5">
+                                    <p class="m-0">{{user_filter.username}} </p>
+                                    <p class="my-1">{{user_filter.email}}</p>
+                                    <p>{{user_filter.bio}}</p>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        
+    </div>
+{% endblock %}

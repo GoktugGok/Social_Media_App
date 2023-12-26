@@ -1,0 +1,147 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  </head>
+  <style>
+    ::-webkit-scrollbar {
+    width: 10px;
+    background-color: #eaeaea;
+    border-left: 1px solid #ccc;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #596971;
+}
+  </style>
+  <body class="bg-secondary">
+
+    <div class="container-fluid">
+      <div class="row  d-flex align-items-end b-3" style="height: 350px; background: url({{user_id.backgroundImage.url}});">
+        <div class="  mt-1 ">
+            <a href="{% url 'index' %}" class=" m-0 p-3 "><i class="bi bi-box-arrow-left text-danger p-2 fs-3 fixed-top "></i></a>
+        </div>
+        <div class="col-md-3 col-12 ">
+          <div style="height:12rem;width:12rem;" class="bg-secondary rounded ms-md-5 mb-md-3">
+            <img src="{{user_id.avatar.url}}" class="img-fluid rounded" style="height:12rem;width:12rem;  object-fit: cover;" alt="">
+          </div>
+        </div>
+        <div class="col-md-9 col-12 ">
+          <ul class="d-flex grid gap-0 column-gap-3 align-items-center justify-content-end text-light me-3" style="list-style-type:none;">
+            <li class="fs-5">{{user_posts.count}} Post</li>
+            <li class="fs-5">{{followed_count}} followed</li>
+            <li class="fs-5">{{following_count}} following</li>
+            <li class="">
+              {% if request.user.id != user_id.id%}
+              <a href="{% url 'follow' user_id.id %}" class="text-decoration-none text-light">{% if follow_filter %} <h5 class="fs-6 ms-2 btn bg-info text-light">following</h5> {% else %} <h5 class="fs-6 ms-2 btn bg-danger text-light">follow</h5> {% endif%} </a>
+              {% endif%}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="bg-secondary pb-5" style="height: 100vh;" >
+      <div class="ms-3 pt-3">
+        <h5 class="text-light ms-5">BİO</h5>
+        <p class="ms-5 text-light">{{user_id.bio}}</p>
+      </div>
+      {% if request.user == user_id %}
+      <div class="d-flex justify-content-end me-5">
+        <div class="btn btn-light " data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="@fat">Update Pics</div>
+      </div>
+      {% endif %}
+      {% if request.user == user_id %}
+      {% endif %}
+      {% if user_id in takip_ettiklerim_kullanicilar %}
+      <div class="d-flex mt-4 justify-content-center">
+        <div class="container-fluid">
+            <div class="row d-flex ">
+              {% for user_post in user_posts %}
+              <div class="col-lg-4 col-md-6  col-xl-4 d-flex justify-content-center p-2" >
+                <div class="card" style=" width: 400px;" >
+                  <img src="{{user_post.image.url}}" style="height:310px; " class="card-img-top" alt="...">
+                  <div class="card-body">
+                    <div class="d-flex " style="width: 100%;">
+                        <p class="" style="width: 100%;">{{user_post.caption}}aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-content-center py-2">
+                      <div>
+                        {% if user_post.no_of_likes == 0 %}
+                          <p>No likes</p>
+                        {% else %}
+                          <p class="m-0 ps-2 pb-2 ms-1 ms-auto">{{user_post.people_who_liked.all.count}}<i class="bi bi-suit-heart-fill text-danger ps-1 "></i></p>
+                        {% endif %}
+                      </div>
+                      {% if request.user == user_post.user %}
+                        <div class="">
+                          <a href="{% url 'post-delete' user_post.id %}" class="rounded bg-dark p-2" >
+                            <i class="bi bi-trash3-fill text-light "></i>
+                          </a>
+                        </div>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <h5>Yorumlar</h5>
+                      <div class="my-3" style="height: 70px;  overflow-x: hidden; overflow-y: scroll; width: auto; ">
+                        {% for comment in user_post.commentpost_set.all %}
+                            <div class=" d-flex">
+                                <img src="{{ comment.user.avatar.url }}" style="height: 20px; width: 20px;" class="me-2 mt-1" alt="">
+                                <h6 class="pt-1 me-1">{{ comment.user.username }}:</h6>
+                                <div>
+                                    <p style="word-break: break-word;display: inline-block;" class="pb-1">{{comment.comment}}</p>
+                                </div>
+                                <div class="d-flex ms-2">
+                                  {% if request.user == comment.user %}
+                                    <a href="{% url 'comment-delete' comment.id %}"><i class="bi bi-trash3-fill text-danger me-1"></i></a>
+                                  {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+              {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="bg-light d-flex align-items-center justify-content-center" style="height: 100%;">
+        <h1 class="">Follow to see posts</h1>
+      </div>
+      {% endif %}
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Update Pics</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form class="p-2" action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
+          <div class="modal-body">
+              {% csrf_token %}
+              <div>
+                <input type="file" name="image_upload" class="form-control">
+                <textarea name="caption" id="" class="form-control mt-2" rows="5" placeholder="Caption.."></textarea>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-danger" data-bs-dismiss="modal">Choose file</button>
+          </div>
+        </form>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+  </body>
+</html>

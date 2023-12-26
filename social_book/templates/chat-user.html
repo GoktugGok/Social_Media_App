@@ -1,0 +1,68 @@
+{% extends 'main.html' %}
+{% load static %}
+{% block content %}
+<style>
+    ::-webkit-scrollbar {
+    width: 10px;
+    background-color: #eaeaea;
+    border-left: 1px solid #ccc;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #596971;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #2E3944;
+}
+.chat:focus,.chat:active {
+        outline: none !important;
+        box-shadow: none;
+}
+</style>
+    <div class=" d-flex justify-content-center align-content-center mt-5">
+        <div class="col-md-6 col-12 bg-light p-3 rounded-top">
+            <div class="d-flex align-content-center pb-2">
+                <a href="{% url 'chat' %}" class="mt-2">
+                    <i class="bi bi-arrow-left  fs-4 text-dark"></i>
+                </a>
+                <a href="{% url 'profile' chat_user.id %}" class="ms-3 text-center my-2 text-decoration-none text-dark">
+                    <img src="{{chat_user.avatar.url}}" style="height: 30px; width: 30px;" class="rounded me-2" alt="">
+                    {{chat_user}}
+                </a>
+            </div>
+            <div class="bg-dark rounded">
+                <div class=" border-4  ps-2 pt-3" id="chat-content" style="height: 300px; overflow-x: hidden; overflow-y: scroll; width: auto;">
+                    {% for chat in chats %}
+                        {% if request.user == chat.user1 %}
+                            <div class="text-light text-end mt-2 me-1 mb-2">{{chat.chat}} <img src="{{user_profile.avatar.url}}" style="height: 25px; width: 25px;" class="mx-1" alt=""></div>
+                        {% else %}
+                            <div class="text-light my-2"><img src="{{chat_user.avatar.url}}" style="height: 25px; width: 25px;" class="mx-1" alt=""> {{chat.chat}}</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+            </div>
+            <div class="p-1 text-light   mt-2">
+                <form action="{% url 'chat-user' chat_user.id %}" id="chat-form" method="POST" class="text-light">
+                    {% csrf_token %}
+                    <input type="hidden" value="{{request.user.id}}" name="firstUser">
+                    <input type="hidden" value="{{chat_user.id}}" name="lastUser">
+                    <input type="text" class="form-control chat" id="chat-input" name="chat" placeholder="write message....">
+                </form>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        // Sohbet penceresini otomatik olarak en alta kaydır
+        function scrollToBottom() {
+            var chatContent = document.getElementById("chat-content");
+            chatContent.scrollTop = chatContent.scrollHeight;
+            
+        }
+
+        // Sayfa yüklendiğinde veya yeni bir mesaj eklendiğinde otomatik olarak kaydır
+        window.onload = scrollToBottom;
+        document.getElementById("chat-form").onsubmit = scrollToBottom;
+    </script>
+
+{% endblock  %}
