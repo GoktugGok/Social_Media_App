@@ -1,21 +1,63 @@
 {% extends 'main.html' %}
-{% load static %}
 {% block content %}
-
-    <div class="d-flex justify-content-center align-content-center mt-5">
-
-        <div class="col-md-6 col-12   ">
-            <ul class="list-unstyled">
-                {% for kullanıcı in takip_ettiklerim_kullanicilar %}
-                    <li class="bg-light border-start border-3 border-dark shadow rounded mb-3" style="background-image: url({{kullanıcı.backgroundImage.url}});" >
-                        <a href="{% url 'chat-user' kullanıcı.id %}" class="py-2 d-flex text-decoration-none text-dark align-items-center" >
-                            <img src="{{kullanıcı.avatar.url}}" alt="" style="height: 30px; width: 30px;" class="rounded mx-2" >
-                            <div class="text-light" style="text-shadow: #FC0 1px 0 10px;">{{kullanıcı.username}}</div>
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
+<div class="row g-0 g-lg-4">
+    <!-- LEFT SIDEBAR -->
+    <div class="col-lg-3 d-none d-lg-flex flex-column">
+        <div class="left-sidebar sticky-sidebar">
+            <div class="sidebar-logo mb-4"><a href="{% url 'index' %}" class="text-decoration-none"><span
+                        class="fw-bold fs-3" style="color:var(--primary);letter-spacing:-1px;">CLiQ</span></a></div>
+            <nav class="d-flex flex-column gap-1 mb-4">
+                <a href="{% url 'index' %}" class="sidebar-nav-link"><i class="bi bi-house-door-fill"></i> Home</a>
+                <a href="{% url 'profile' request.user.id %}" class="sidebar-nav-link"><i
+                        class="bi bi-person-circle"></i> Profile</a>
+                <a href="{% url 'chat' %}" class="sidebar-nav-link active"><i class="bi bi-chat-dots-fill"></i>
+                    Messages</a>
+                <a href="{% url 'settings' %}" class="sidebar-nav-link"><i class="bi bi-gear-fill"></i> Settings</a>
+                <a href="{% url 'logout' %}" class="sidebar-nav-link text-danger"><i class="bi bi-box-arrow-right"></i>
+                    Log Out</a>
+            </nav>
         </div>
     </div>
 
-{% endblock  %}
+    <!-- MESSAGES LIST -->
+    <div class="col-lg-6">
+        <div class="modern-card p-4 mt-2">
+            <h5 class="fw-bold mb-4">Messages</h5>
+            {% if takip_ettiklerim_kullanicilar %}
+            <div class="d-flex flex-column gap-2">
+                {% for kullanici in takip_ettiklerim_kullanicilar %}
+                <a href="{% url 'chat-user' kullanici.id %}" class="text-decoration-none">
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 chat-row position-relative">
+                        <div class="avatar-ring flex-shrink-0"><img src="{{ kullanici.avatar.url }}" width="44"
+                                height="44" class="avatar-img"></div>
+                        <div>
+                            <span class="fw-bold text-dark d-block">@{{ kullanici.username }}</span>
+                            <small class="text-muted">Tap to open conversation</small>
+                        </div>
+                        {% if kullanici.unread_count > 0 %}
+                        <span class="badge bg-danger position-absolute top-0 end-0 me-2 mt-2">{{ kullanici.unread_count }}</span>
+                        {% endif %}
+                        <i class="bi bi-chevron-right text-muted ms-auto"></i>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-chat-dots text-muted display-5 mb-3"></i>
+                <p class="text-muted">Follow people to start messaging them.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>
+    .chat-row {
+        transition: background 0.18s ease;
+    }
+
+    .chat-row:hover {
+        background: var(--primary-light);
+    }
+</style>
+{% endblock %}

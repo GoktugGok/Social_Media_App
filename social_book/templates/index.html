@@ -1,332 +1,357 @@
 {% extends 'main.html' %}
-{% load static %}
 {% block content %}
-<style>
-    ::-webkit-scrollbar {
-    width: 10px;
-    background-color: #eaeaea;
-    border-left: 1px solid #ccc;
-}
-::-webkit-scrollbar-thumb {
-    background-color: #596971;
-}
-::-webkit-scrollbar-thumb:hover {
-    background-color: #2E3944;
-}
-.comment:focus,.comment:active {
-        outline: none !important;
-        box-shadow: none;
-}
-</style>
-    <div class="container my-5">
-        <div class="row ">
-            <div class="col-lg-6 offset-lg-1 order-lg-1 col-12 order-2" >
-                {% if posts.count == 0 %}
-                <div class="bg-light d-flex justify-content-center align-content-center shadow p-3 mb-5 bg-white rounded"><h2>no posts shared</h2></div>
-                {%else%}
-                {% for post in posts %}
-                <div class="post-item">
-                    <div class="bg-white rounded pb-3 mb-5">
-                        <div class="d-flex justify-content-between bg-white rounded-top align-items-center p-3 ">
-                                <div class="d-flex justify-content-center rounded-top align-items-center grid gap-2">
-                                    <a href="{% url 'profile' post.user.id %}" class="text-decoration-none text-dark">
-                                        <img src="{{post.user.avatar.url}}" class="rounded-circle" width="40" height="40" alt="">
-                                        <span class="">@{{post.user}}</span>
-                                    </a>
-                                </div>
-                                <div>
-                                    {% if request.user == post.user %}
-                                        <a href="{% url 'post-delete' post.id %}" class="rounded bg-dark p-2 postDelete" data-post-id="{{post.id}}">
-                                            <i class="bi bi-trash3-fill text-light "></i>
-                                        </a>
-                                    {% endif %}
-                                </div>
-                        </div>
-                        <div class="">
-                            <a href="{{post.image.url}}">
-                                <img src="{{post.image.url}}" class="img-fluid w-100" style="height: 500px;"  alt="">
-                            </a>
-                        </div>
-                        <div class="d-flex justify-content-start ms-3 mt-3 rounded-top align-items-center grid gap-3">
-                            {% if request.user in post.people_who_liked.all %}
-                                <a href="#" class="text-decoration-none text-success like-button" data-post-id="{{ post.id }}">
-                                    <i class="bi bi-heart-fill fs-4"></i>
-                                </a>
-                            {% else %}
-                                <a href="#" class="text-decoration-none text-dark like-button" data-post-id="{{ post.id }}">
-                                    <i class="bi bi-heart fs-4"></i>
-                                </a>
-                            {% endif %}
-                        </div>      
-                        <div class="ms-3" id="likes-info-{{ post.id }}">
-                            
-                            {% if post.people_who_liked.count == 0 %}
-                                    
-                            {% else %}
-                                <p class="m-0">Liked by {{post.people_who_liked.count}} person</p>
-                            {% endif %}
-                            
-                            {% for like in likes %}
-                              
-                                {% if like.post.id == post.id %}
-                                    <img src="{{like.user.avatar.url}}"   width="20" height="20" alt="">
-                                {% endif %}
-                                
-                            {% endfor %}
-                          
-                        </div>
-                        <hr class="">
-                        <div class="d-flex align-items-center ms-3  mt-3">
-                            <img src="{{post.user.avatar.url}}" class="rounded-circle " width="35" height="35" alt="">
-                            <div class="ms-2">
-                                <a href="" class="text-decoration-none text-dark"><strong class="m-0 ">{{post.user}}</strong></a>
-                                <p class=" m-0 rounded-5" >{{post.caption}}</p>
-                            </div>
-                            
-                        </div>
-                        <hr class="p-0 m-0 mt-2">
-                        <div id="success-message" class="success-message"></div>
-                        <div id="error-message" class="error-message"></div>
-                        <div class="my-3 mx-3 comment-container" id="comment-container-root-{{post.id}}" style="height: 70px; overflow-x: hidden; overflow-y: scroll; width: auto;">
-                            {% for comment in post.commentpost_set.all %}
-                                <div class="comment-item">
-                                    <div class="d-flex">
-                                        <img src="{{ comment.user.avatar.url }}" style="height: 20px; width: 20px;" class="me-2 mt-1" alt="">
-                                        <h6 class="pt-1 me-1">{{ comment.user.username }}:</h6>
-                                        <div>
-                                            <p style="word-break: break-word;display: inline-block;" class="py-1 text-wrap">{{comment.comment}}</p>
-                                        </div>
-                                        <div class="d-flex ms-2">
-                                            {% if request.user == comment.user %}
-                                                <form action="{% url 'comment-delete' comment.id %}" method="GET">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn p-0 py-1 commentDelete" data-comment-id="{{comment.id}}">
-                                                        <i class="bi bi-trash3-fill text-danger me-1"></i>
-                                                    </button>
-                                                </form>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        
-                        <div class="d-flex justify-content-between mx-2 rounded-5 " style="background-color: rgb(212, 210, 210);">
-                            <form action="{% url 'comment' post.id %}" id="comment-form" method="POST" enctype="multipart/form-data" class="w-100">
-                                {% csrf_token %}
-                                <input type="hidden" name="post" id="post-id" value="{{ post.id }}">
-                                <input type="hidden" name="user" value="{{ request.user }}">
-                                <div class="d-flex">
-                                    <input type="text" name="comment" id="comment-input-{{ post.id }}" class="form-control rounded-5 ps-3 border-0 comment" placeholder="post a comment" style="outline: none; background-color: rgb(212, 210, 210);">
-                                    <button type="submit" class="btn comment-button" data-post-id="{{ post.id }}" id="comment-submit">
-                                        <i class="bi bi-box-arrow-in-right fs-4"></i>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    
-                    </div>
-                </div>
-                {% endfor %}
-                {% endif %}
-            </div>
-            <div class="col-lg-4 offset-lg-1 order-lg-3 col-12 order-1 mb-3">
-                <div class="bg-white rounded">
-                    <div class="d-flex justify-content-between align-items-center pt-1 px-2 rounded-top" style="background-color: rgb(235, 237, 237)">
-                        <h5 class="p-2">Users You Can Follow </h5>
-                    </div>
-                    {% for item in takip_etmediklerim %}
-                        <div class="d-flex justify-content-between align-items-center pt-1 px-2">
-                            <div class="d-flex align-items-center">
-                                <a href="{% url 'profile' item.kullanici.id %}" class="d-flex align-items-center text-decoration-none text-dark">
-                                    <img src="{{ item.kullanici.avatar.url }}" width="40" height="40" alt="">
-                                    <div class="ms-3">
-                                        <h6 class="p-0 m-0">{{ item.kullanici.username }}</h6>
-                                        <small>Takipçiler: {{ item.takipci_sayisi }}</small>
-                                    </div>
-                                </a>
-                            </div>
-                            <p class="text-center mt-2 btn border">
-                                <a href="{% url 'follow' item.kullanici.id %}" class="text-decoration-none text-dark">Follow</a>
-                            </p>
-                        </div>
-                    {% endfor %}
+<div class="row g-0 g-lg-4">
 
+    <!-- LEFT SIDEBAR -->
+    <div class="col-lg-3 d-none d-lg-flex flex-column">
+        <div class="left-sidebar sticky-sidebar">
+            <div class="sidebar-logo mb-4">
+                <a href="{% url 'index' %}" class="text-decoration-none">
+                    <span class="fw-bold fs-3" style="color:var(--primary);letter-spacing:-1px;">CLiQ</span>
+                </a>
+            </div>
+            <form action="{% url 'search' %}" class="mb-4 position-relative">
+                <i class="bi bi-search position-absolute top-50 translate-middle-y ms-3 text-muted"
+                    style="font-size:0.8rem;z-index:1;"></i>
+                <input class="form-control search-input ps-5" type="text" name="q" placeholder="Search...">
+            </form>
+            <div class="sidebar-user-card mb-4 d-flex align-items-center gap-3">
+                <div class="avatar-ring flex-shrink-0">
+                    <img src="{{ user_profile.avatar.url }}" width="44" height="44" class="avatar-img">
+                </div>
+                <div style="line-height:1.3;overflow:hidden;">
+                    {% if request.user.is_authenticated %}
+                    <a href="{% url 'profile' request.user.id %}"
+                        class="text-decoration-none text-dark fw-bold d-block text-truncate">
+                        @{{ user_profile.username }}
+                    </a>
+                    {% else %}
+                    <span class="text-dark fw-bold d-block text-truncate">
+                        @{{ user_profile.username }}
+                    </span>
+                    {% endif %}
+                    <small class="text-muted" style="font-size:0.72rem;">
+                        {% if user_profile.bio %}{{ user_profile.bio|truncatechars:28 }}{% else %}No bio yet{% endif %}
+                    </small>
+                </div>
+            </div>
+            <nav class="d-flex flex-column gap-1 mb-4">
+                <a href="{% url 'index' %}" class="sidebar-nav-link active"><i class="bi bi-house-door-fill"></i>
+                    Home</a>
+                <a href="{% url 'profile' request.user.id %}" class="sidebar-nav-link"><i
+                        class="bi bi-person-circle"></i> Profile</a>
+                <a href="{% url 'chat' %}" class="sidebar-nav-link"><i class="bi bi-chat-dots-fill"></i> Messages</a>
+                <a href="{% url 'settings' %}" class="sidebar-nav-link"><i class="bi bi-gear-fill"></i> Settings</a>
+                <a href="{% url 'logout' %}" class="sidebar-nav-link text-danger"><i class="bi bi-box-arrow-right"></i>
+                    Log Out</a>
+            </nav>
+            <div class="dropdown mb-2">
+                <button class="btn btn-modern w-100 d-flex align-items-center justify-content-center gap-2"
+                    type="button" data-bs-toggle="dropdown" data-bs-auto-close="false">
+                    <i class="bi bi-plus-circle-fill"></i> New Post
+                </button>
+                <div class="dropdown-menu p-3 modern-card mt-2 shadow-lg" style="width:280px;border:none;">
+                    <h6 class="fw-bold mb-3">Create New Post</h6>
+                    <form action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="image_upload" class="form-label d-block text-center p-3 rounded-3 position-relative" 
+                                style="border:2px dashed #ccc;cursor:pointer;background-color:#f8f9fa;transition:0.3s;">
+                                <i class="bi bi-image fs-4 text-primary d-block mb-1"></i>
+                                <small class="text-muted">Click to upload image</small>
+                                <button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image" style="display:none;"></button>
+                            </label>
+                            <input type="file" name="image_upload" id="image_upload" 
+                                class="form-control form-control-sm rounded-3" style="display:none;" accept="image/*">
+                        </div>
+                        <div class="mb-3"><textarea name="caption" class="form-control rounded-3" rows="3"
+                                placeholder="Write a caption..."></textarea></div>
+                        <button type="submit" class="btn btn-modern w-100">Share</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(".postDelete").click(function (event){
-            event.preventDefault();
-            var csrftoken = $("[name=csrfmiddlewaretoken]").val();
-            var postId = $(this).data("post-id");
-            console.log(postId)
-            $.ajax({
-                type: "GET",
-                url: "{% url 'post-delete' 0 %}".replace('0',postId),
-                data:{
-                    csrfmiddlewaretoken:csrftoken
-                },
-                success:function(response){
-                    console.log("Post başarıyla silindi.");
-                    $(event.target).closest('.post-item').fadeOut(300, function() {
-                        $(this).remove();
-                    });
-                },
-                error: function (xhr, errmsg, err) {
-                    console.log(xhr.status + ": " + xhr.responseText);
-                }
 
-            })
-        })
-    </script>
-    <script>
-            $(".like-button").click(function (event) {
-                event.preventDefault();
-                var postId = $(this).data("post-id");
-                var csrftoken = $("[name=csrfmiddlewaretoken]").val();
-                
-                $.ajax({
-                    type: "POST",
-                    url: "{% url 'like-post' 0 %}".replace('0', postId),
-                    data: {
-                        csrfmiddlewaretoken: csrftoken
-                    },
-                    success: function (data) {
-                        // Beğeni düğmesini güncelle
-                        if (data.liked) {
-                            $(event.target).removeClass("bi-heart text-dark").addClass("bi-heart-fill text-success");
-                        } else {
-                            $(event.target).removeClass("bi-heart-fill text-success").addClass("bi-heart text-dark");
-                        }
-        
-                        // Beğeni bilgilerini güncelle
-                        var likesContainer = $("#likes-info-" + postId);
-                        likesContainer.html(data.likes_html);
-                        
-                    },
-                    error: function (xhr, errmsg, err) {
-                        console.log(xhr.status + ": " + xhr.responseText);
-                    }
-                });
-            });
-            
-    </script>
-    <script>
-            // Mesaj gönderme butonuna tıklanınca
-        $(".comment-button").click(function (event) {
-            event.preventDefault();
-            var postId = $(this).data("post-id");
-            var csrftoken = $("[name=csrfmiddlewaretoken]").val();
-            var commentInput = $("#comment-input-" + postId);
-            var commentText = commentInput.val().trim();
-            var username = "{{ request.user.username }}"; 
-            var avatar = "{{ request.user.avatar.url }}";
+    <!-- MAIN FEED -->
+    <div class="col-lg-6">
+        {% if posts.count == 0 %}
+        <div class="modern-card p-5 text-center mt-3">
+            <i class="bi bi-camera text-muted display-4 mb-3"></i>
+            <h5 class="fw-bold">No posts yet</h5>
+            <p class="text-muted small">Follow people to see their latest posts here.</p>
+        </div>
+        {% else %}
+        {% for post in posts %}
+        <article class="modern-card mb-4">
+            <!-- Post Header -->
+            <div class="p-3 d-flex align-items-center justify-content-between border-bottom"
+                style="border-color:rgba(0,0,0,0.05)!important;">
+                {% if post.user and post.user.id %}
+                <a href="{% url 'profile' post.user.id %}" class="d-flex align-items-center gap-2 text-decoration-none">
+                    <div class="avatar-ring">
+                        <img src="{{ post.user.avatar.url }}" width="34" height="34" class="avatar-img">
+                    </div>
+                    <span class="fw-bold text-dark" style="font-size:0.9rem;">
+                        @{{ post.user.username }}
+                    </span>
+                </a>
+                {% else %}
+                <div class="d-flex align-items-center gap-2">
+                    <div class="avatar-ring">
+                        <img src="{{ post.user.avatar.url }}" width="34" height="34" class="avatar-img">
+                    </div>
+                    <span class="fw-bold text-dark" style="font-size:0.9rem;">
+                        @{{ post.user.username }} (Silinmiş Kullanıcı)
+                    </span>
+                </div>
+                {% endif %}
 
-            $.ajax({
-                type: "POST",
-                url: "{% url 'comment' 0 %}".replace('0', postId),
-                data: {
-                    csrfmiddlewaretoken: csrftoken,
-                    comment: commentText,
-                },
-                success: function (data) {
-                    commentInput.val('');
-                    var commentContainer = $("#comment-container-root-"+postId);
-                    var commentId = data.comment_id;
-                    var commentUser = data.comment_user;
-                    var comment_url = "{% url 'comment-delete' 0 %}".replace('0', commentId)
-                    commentContainer.prepend(`
-                        <div class="d-flex comment-item">
-                            <img src="${avatar}" style="height: 20px; width: 20px;" class="me-2 mt-1" alt="">
-                            <h6 class="pt-1 me-1">${username}:</h6>
+                {% if request.user == post.user %}
+                <div class="dropdown">
+                    <button class="btn btn-link text-muted p-1" data-bs-toggle="dropdown"><i
+                            class="bi bi-three-dots"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-end modern-card border-0 shadow p-2"
+                        style="min-width:140px;">
+                        <li><a href="#" class="dropdown-item text-danger rounded-2 postDelete"
+                                data-post-id="{{ post.id }}"><i class="bi bi-trash3 me-2"></i>Delete</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            <!-- Post Image -->
+            {% if post.image %}
+            <div class="post-img-container">
+                <img src="{{ post.image.url }}" class="post-img" alt="Post">
+            </div>
+            {% endif %}
+            <!-- Actions -->
+            <div class="px-3 pt-3 pb-2">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <a href="javascript:void(0)" class="like-button scale-effect text-decoration-none"
+                        data-post-id="{{ post.id }}">
+                        {% if request.user in post.people_who_liked.all %}
+                        <i class="bi bi-heart-fill fs-5 text-danger"></i>
+                        {% else %}
+                        <i class="bi bi-heart fs-5 text-dark"></i>
+                        {% endif %}
+                    </a>
+                </div>
+                <!-- Likes Info -->
+                <div id="likes-info-{{ post.id }}" class="mb-2" style="font-size:0.82rem;color:#374151;">
+                    {% if post.people_who_liked.count > 0 %}
+                    <span class="fw-bold">Liked by {{ post.people_who_liked.count }} person</span><br>
+                    {% for liker in post.people_who_liked.all reversed %}
+                    <img src="{{ liker.avatar.url }}" width="20" height="20" class="rounded-circle me-1 mt-1"
+                        style="object-fit:cover;" alt="{{ liker.username }}">
+                    {% endfor %}
+                    {% endif %}
+                </div>
+                <!-- Caption -->
+                <p class="mb-2" style="font-size:0.9rem;">
+                    {% if post.user %}
+                    <a href="{% url 'profile' post.user.id %}" class="fw-bold text-dark text-decoration-none me-1">
+                        @{{ post.user.username }}
+                    </a>
+                    {% endif %}
+                    {{ post.caption }}
+                </p>
+                <!-- Comments -->
+                <div class="comment-section mb-3" id="comment-container-root-{{ post.id }}"
+                    style="max-height:180px;overflow-y:auto;">
+                    {% for comment in post.commentpost_set.all %}
+                    <div class="d-flex gap-2 mb-2 align-items-start comment-item" data-comment-id="{{ comment.id }}">
+                        <img src="{{ comment.user.avatar.url }}" width="22" height="22"
+                            class="rounded-circle mt-1 flex-shrink-0" style="object-fit:cover;">
+                        <div class="flex-grow-1 d-flex align-items-start justify-content-between gap-1">
                             <div>
-                                <p style="word-break: break-word;display: inline-block;" class="pb-1 text-wrap">${commentText}</p>
+                                <span class="fw-bold small">@{{ comment.user.username }}</span>
+                                <span class="small text-muted">{{ comment.comment }}</span>
                             </div>
-                            <div class="d-flex ms-2">
-                                {% if request.user == user %}
-                                    <a href=${comment_url} class="commentDelete" data-comment-id="${commentId}"><i class="bi bi-trash3-fill text-danger me-1"></i></a>
-                                {% endif %}
+                            {% if request.user == comment.user %}
+                            <button class="btn btn-link text-danger p-0 flex-shrink-0 commentDelete"
+                                data-comment-id="{{ comment.id }}" style="font-size:0.80rem;"><i
+                                    class="bi bi-trash3"></i></button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- Comment Form -->
+                <form action="{% url 'comment' post.id %}" method="POST"
+                    class="d-flex align-items-center gap-2 pt-2 comment-form" data-post-id="{{ post.id }}"
+                    style="border-top:1px solid rgba(0,0,0,0.05);">
+                    {% csrf_token %}
+                    <img src="{{ user_profile.avatar.url }}" width="26" height="26" class="rounded-circle flex-shrink-0"
+                        style="object-fit:cover;">
+                    <input type="text" name="comment" id="comment-input-{{ post.id }}"
+                        class="form-control form-control-sm border-0 bg-light rounded-pill px-3 comment-input"
+                        placeholder="Add a comment..." autocomplete="off">
+                    <button type="submit" class="btn p-2 ms-2 border-0 text-primary"
+                        style="font-size:0.95rem;background:transparent;transition:0.2s;display:flex;align-items:center;justify-content:center;"><i class="bi bi-send-fill"></i></button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="sticky-sidebar">
+            <div class="modern-card p-4">
+                <h6 class="fw-semibold text-muted mb-4"
+                    style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;">Suggested for you</h6>
+                {% for item in takip_etmediklerim %}
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="{{ item.kullanici.avatar.url }}" width="34" height="34"
+                            class="rounded-circle flex-shrink-0" style="object-fit:cover;">
+                        <div style="line-height:1.25;overflow:hidden;max-width:105px;">
+                            <a href="{% url 'profile' item.kullanici.id %}"
+                                class="text-decoration-none text-dark fw-bold small d-block text-truncate">
+                                @{{ item.kullanici.username }}
+                            </a>
+                            <small class="text-muted" style="font-size:0.68rem;">
+                                {{ item.takipci_sayisi }} followers
+                            </small>
+                        </div>
+                    </div>
+                    <a href="{% url 'follow' item.kullanici.id %}" class="btn btn-outline-modern btn-sm py-0 px-3"
+                        style="font-size:0.76rem;">Follow</a>
+                </div>
+                {% endfor %}
+                <hr class="my-3 opacity-25">
+            </div>
+
+            <!-- MUTUAL FOLLOWERS / MESSAGES SECTION -->
+            <div class="modern-card my-2 p-4">
+                <h6 class="fw-semibold text-muted mb-4"
+                    style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;">Direct Messages</h6>
+                {% if karsilikli_takipci %}
+                    {% for user in karsilikli_takipci %}
+                    <div class="d-flex align-items-center justify-content-between mb-3 position-relative">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="{{ user.avatar.url }}" width="34" height="34"
+                                class="rounded-circle flex-shrink-0" style="object-fit:cover;">
+                            <div style="line-height:1.25;overflow:hidden;max-width:105px;">
+                                <a href="{% url 'profile' user.id %}"
+                                    class="text-decoration-none text-dark fw-bold small d-block text-truncate">
+                                    @{{ user.username }}
+                                </a>
                             </div>
                         </div>
-                    `);
+                        {% if user.unread_count > 0 %}
+                        <span class="badge bg-danger position-absolute top-0 end-0" style="font-size:0.65rem;">{{ user.unread_count }}</span>
+                        {% endif %}
+                        <a href="{% url 'chat-user' user.id %}" class="btn btn-outline-modern btn-sm py-0 px-2"
+                            style="font-size:0.76rem;" title="Send Message">
+                            <i class="bi bi-chat-dots-fill"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small text-center mb-0">No mutual followers yet</p>
+                {% endif %}
+                <hr class="my-3 opacity-25">
+            </div>
 
-                    // Yeni eklenen mesajlar için commentDelete sınıfını dinleyen event listener ekle
-                    $(".commentDelete").click(function (event) {
-                    event.preventDefault();
-                    var csrftoken = $("[name=csrfmiddlewaretoken]").val();
-                    var commentId = $(this).data("comment-id");
+            <div class="modern-card p-4">
+                <p class="text-muted m-0" style="font-size:0.67rem;">© 2026 CLiQ — Social Media App</p>
+            </div>
+        </div>
+    </div>
 
-                        console.log(commentId)
-                    // Yorum ID'si kontrolü ekleyin
-                    if (commentId !== undefined) {
-                        $.ajax({
-                            type: "GET",
-                            url: "{% url 'comment-delete' 0 %}".replace('0', commentId),
-                            data: {
-                                csrfmiddlewaretoken: csrftoken
-                            },
-                            success: function (response) {
-                                if (response.success) {
-                                    // Başarılı ise, yorumun bulunduğu DOM elemanını kaldır
-                                    console.log("Yorum başarıyla silindi.");
-                                    $(event.target).closest('.comment-item').fadeOut(300, function() {
-                                        $(this).remove();
-                                    });
-                                } else {
-                                    console.log('Yorum silinemedi.');
-                                }
-                            },
-                            error: function (xhr, errmsg, err) {
-                                console.log(xhr.status + ": " + xhr.responseText);
-                            }
-                        });
-                    } else {
-                        console.log('Yorum ID bulunamadı.');
-                    }
-                });
+</div>
 
-                },
-                error: function (xhr, errmsg, err) {
-                    console.log(err);
-                }
-            });
-        });
-
-    </script>
-    <script>
-        $(".commentDelete").click(function (event) {
-        event.preventDefault();
-        var csrftoken = $("[name=csrfmiddlewaretoken]").val();
-        var commentId = $(this).data("comment-id");
-        console.log(commentId);
-
-        $.ajax({
-            type: "GET",
-            url: "{% url 'comment-delete' 0 %}".replace('0', commentId),
-            data: {
-                csrfmiddlewaretoken: csrftoken
-            },
-            success: function (response) {
-                if (response.success) {
-                    // Başarılı ise, yorumun bulunduğu DOM elemanını kaldır
-                    console.log("Yorum başarıyla silindi.");
-                    $(event.target).closest('.comment-item').fadeOut(300, function() {
-                $(this).remove();
-            });
-                    // Buraya yorumun silindiğiyle ilgili ek işlemleri ekleyebilirsiniz.
-                } else {
-                    console.log('Yorum silinemedi.');
-                }
-            },
-            error: function (xhr, errmsg, err) {
-                console.log(xhr.status + ": " + xhr.responseText);
+<script>
+    $(document).ready(function () {
+        // File upload preview
+        $('#image_upload').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            var label = $(this).prev('label');
+            if (fileName) {
+                label.html(
+                    '<i class="bi bi-check-circle fs-4 text-success d-block mb-1"></i>' +
+                    '<small class="text-success fw-bold">' + fileName + '</small>' +
+                    '<button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image"></button>'
+                );
+                label.find('.clear-image').show();
             }
         });
+
+        // Clear selected image
+        $(document).on('click', '.clear-image', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#image_upload').val('');
+            var label = $('#image_upload').prev('label');
+            label.html(
+                '<i class="bi bi-image fs-4 text-primary d-block mb-1"></i>' +
+                '<small class="text-muted">Click to upload image</small>' +
+                '<button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image" style="display:none;"></button>'
+            );
+        });
+
+        $(document).on("click", ".postDelete", function (e) {
+            e.preventDefault();
+            var postId = $(this).data("post-id");
+            var article = $(this).closest('article');
+            if (!confirm("Delete this post?")) return;
+            $.get("{% url 'post-delete' 0 %}".replace('0', postId), function (data) {
+                if (data.success) article.fadeOut(350, function () { $(this).remove(); });
+            });
+        });
+        $(document).on("click", ".like-button", function (e) {
+            e.preventDefault();
+            var postId = $(this).data("post-id");
+            var btn = $(this);
+            $.ajax({
+                type: 'POST',
+                url: "{% url 'like-post' 0 %}".replace('0', postId),
+                data: { csrfmiddlewaretoken: "{{ csrf_token }}" },
+                success: function (data) {
+                    if (data.liked) { btn.find('i').removeClass('bi-heart text-dark').addClass('bi-heart-fill text-danger'); }
+                    else { btn.find('i').removeClass('bi-heart-fill text-danger').addClass('bi-heart text-dark'); }
+                    $("#likes-info-" + postId).html(data.likes_html);
+                }
+            });
+        });
+        $(document).on("submit", ".comment-form", function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var postId = form.data("post-id");
+            var input = form.find(".comment-input");
+            var text = input.val().trim();
+            if (!text) return;
+            $.ajax({
+                type: 'POST', url: form.attr('action'), data: form.serialize(),
+                success: function (data) {
+                    if (data.success) {
+                        input.val('');
+                        var html = '<div class="d-flex gap-2 mb-2 align-items-start comment-item page-animate" data-comment-id="' + data.comment_id + '">' +
+                            '<img src="' + data.user_avatar + '" width="22" height="22" class="rounded-circle mt-1 flex-shrink-0" style="object-fit:cover;">' +
+                            '<div class="flex-grow-1 d-flex align-items-start justify-content-between gap-1">' +
+                            '<div><span class="fw-bold small">@' + data.comment_user + '</span> <span class="small text-muted">' + data.comment_text + '</span></div>' +
+                            '<button class="btn btn-link text-danger p-0 flex-shrink-0 commentDelete" data-comment-id="' + data.comment_id + '" style="font-size:0.80rem;"><i class="bi bi-trash3"></i></button>' +
+                            '</div></div>';
+                        var container = document.getElementById("comment-container-root-" + postId);
+                        $(container).append(html);
+                        container.scrollTop = container.scrollHeight;
+                    } else { alert(data.error || "Could not post comment."); }
+                },
+                error: function () { alert("Error. Please try again."); }
+            });
+        });
+        $(document).on("click", ".commentDelete", function (e) {
+            e.preventDefault();
+            var btn = $(this);
+            var commentId = btn.data("comment-id");
+            var row = btn.closest('.comment-item');
+            $.get("{% url 'comment-delete' 0 %}".replace('0', commentId), function (data) {
+                if (data.success) row.fadeOut(300, function () { $(this).remove(); });
+            });
+        });
     });
-
-
-    </script>
-{% endblock  %}
+</script>
+{% endblock %}

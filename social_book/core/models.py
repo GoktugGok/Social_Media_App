@@ -31,12 +31,15 @@ class CommentPost(models.Model):
         ordering = ['-updated','-created']
 
     def __str__(self):
-        return self.user.username
+        if self.user:
+            return self.user.username
+        return f"Deleted User - Comment {self.id}"
     
 class Chats(models.Model):
     user1 = models.ForeignKey(Users, related_name='chat_user1' ,on_delete=models.CASCADE)
     user2 = models.ForeignKey(Users, related_name='chat_user2', on_delete=models.CASCADE)
     chat = models.TextField()
+    is_read = models.BooleanField(default=False)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(default=timezone.now)
 
@@ -44,7 +47,9 @@ class Chats(models.Model):
         ordering = ['-updated','-created']
 
     def __str__(self):
-        return self.user1.username
+        if self.user1:
+            return self.user1.username
+        return f"Deleted User - Chat {self.id}"
     
 class Post(models.Model):
     user = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)
@@ -60,7 +65,9 @@ class Post(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return self.user.username
+        if self.user:
+            return self.user.username
+        return f"Deleted User - Post {self.id}"
     
 class LikePost(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
@@ -71,7 +78,9 @@ class LikePost(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return self.user.username
+        if self.user:
+            return self.user.username
+        return f"Deleted User - Post {self.id}"
      
 class Follow(models.Model):
     following = models.OneToOneField(Users, related_name='following',on_delete=models.CASCADE)
@@ -79,7 +88,9 @@ class Follow(models.Model):
     created_at = models.DateTimeField(default=datetime.now)
 
     def __str__(self):
-        return self.following.username
+        if self.following:
+            return self.following.username
+        return f"Deleted User - Follow {self.id}"
     
     def is_following(self, user_to_check):
         return self.followed.filter(id=user_to_check.id).exists()

@@ -1,5 +1,48 @@
+<<<<<<< HEAD
 env/
 __pycache__/
 *.pyc
 *.sqlite3
 .env
+=======
+# Python derlenmiş dosyaları
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Sanal ortam (virtual environment)
+venv/
+env/
+.env/
+myenv/
+env.bak/
+
+# Veritabanı dosyaları
+*.sqlite3
+*.db
+db.sqlite3
+
+# IDE dosyaları
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Django static dosyaları (production'da derlenen)
+staticfiles/
+static_root/
+media/
+
+# Ortam değişkenleri (ÇOK ÖNEMLİ!)
+.env
+*.env
+
+# Python paketleme dosyaları
+*.egg-info/
+dist/
+build/
+
+# Mac OS sistem dosyaları
+.DS_Store
+>>>>>>> ca8a58d0ea03c444270a62ed5020a5e685dd826d
