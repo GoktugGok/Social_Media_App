@@ -17,6 +17,14 @@ def index(request):
     takip_ettiklerim = Follow.objects.filter(following=request.user).values_list('followed', flat=True)
     takip_ettiklerim_kullanicilar = Users.objects.filter(id__in=takip_ettiklerim)
 
+    # Karşılıklı takip ettiklerim (ben onu takip ediyorum ve o da beni takip ediyor)
+    beni_takip_edenler = Follow.objects.filter(followed=request.user).values_list('following', flat=True)
+    karsilikli_takipci = takip_ettiklerim_kullanicilar.filter(id__in=beni_takip_edenler)
+    
+    # Her karşılıklı takipçi için okunmamış mesaj sayısını ekle
+    for kullanici in karsilikli_takipci:
+        unread_count = Chats.objects.filter(user1=kullanici, user2=request.user, is_read=False).count()
+        kullanici.unread_count = unread_count
 
     tum_kullanicilar = Users.objects.exclude(id=request.user.id)
     
@@ -33,6 +41,7 @@ def index(request):
     context = {
         'user_profile':user_profile,
         'takip_etmediklerim':takip_etmediklerim,
+        'karsilikli_takipci': karsilikli_takipci,
         'posts': posts,
         'comments':comments,
         'likes': likes,
@@ -53,19 +62,23 @@ def upload(request):
     else:
         return redirect('index')
 
-def comment(request,pk):
+def comment(request, pk):
     if request.method == 'POST':
         user = request.user
-        comment = request.POST['comment'].strip()
+        comment_text = request.POST.get('comment', '').strip()
 
-        if comment:
+        if comment_text:
             post = Post.objects.get(id=pk)
-            new_comment = CommentPost.objects.create(post=post, user=user, comment=comment)
+            new_comment = CommentPost.objects.create(post=post, user=user, comment=comment_text)
             new_comment.save()
-            print(new_comment.id)
+            return JsonResponse({
+                'success': True,
+                'comment_id': new_comment.id,
+                'comment_user': new_comment.user.username,
+                'comment_text': new_comment.comment,
+                'user_avatar': new_comment.user.avatar.url
+            })
 
-        return JsonResponse({'success': True,'comment_id': new_comment.id,'comment_user': new_comment.user.username})
-    
     return JsonResponse({'success': False, 'error': 'Yorum gönderilemedi'})
 
 def comment_delete(request,pk):
@@ -142,6 +155,11 @@ def chat(request):
     takip_ettiklerim = Follow.objects.filter(following=request.user).values_list('followed', flat=True)
     takip_ettiklerim_kullanicilar = Users.objects.filter(id__in=takip_ettiklerim)
 
+    # Her kullanıcı için okunmamış mesaj sayısını ekle
+    for kullanici in takip_ettiklerim_kullanicilar:
+        unread_count = Chats.objects.filter(user1=kullanici, user2=request.user, is_read=False).count()
+        kullanici.unread_count = unread_count
+
     context = {
         'user_profile':user_profile,
         'takip_ettiklerim_kullanicilar':takip_ettiklerim_kullanicilar,
@@ -155,6 +173,8 @@ def chat_user(request,pk):
 
     chats = Chats.objects.filter(Q(user1=request.user, user2=chat_user) | Q(user1=chat_user, user2=request.user)).order_by('created')
 
+    # Karşı taraftan gelen okunmamış mesajları read olarak işaretle
+    Chats.objects.filter(user1=chat_user, user2=request.user, is_read=False).update(is_read=True)
     
     if request.method == 'POST':
         firstUser = request.user
