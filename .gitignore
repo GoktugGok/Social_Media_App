@@ -30,9 +30,9 @@ db.sqlite3
 *.swo
 
 # Django static dosyaları (production'da derlenen)
-staticfiles/
-static_root/
-media/
+#staticfiles/
+#static_root/
+#media/
 
 # Ortam değişkenleri (ÇOK ÖNEMLİ!)
 .env
