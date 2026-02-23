@@ -677,3 +677,21 @@ body.sheet-open {
         font-size: 0.78rem;
     }
 }
+
+/* ===== MOBILE UPLOAD LABEL ===== */
+.mobile-upload-label {
+    border: 2px dashed #c7d2fe;
+    cursor: pointer;
+    background: rgba(99, 102, 241, 0.04);
+    transition: border-color 0.25s ease, background 0.25s ease;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-upload-label:hover {
+    border-color: var(--primary);
+    background: rgba(99, 102, 241, 0.08);
+}

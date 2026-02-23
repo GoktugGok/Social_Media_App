@@ -1,5 +1,7 @@
 {% load static %}
-<!-- MOBILE TOP BAR (only on mobile) -->
+{% with current_url=request.resolver_match.url_name %}
+
+<!-- ===== MOBILE TOP BAR ===== -->
 <nav class="modern-nav py-2 d-flex d-lg-none" id="mobileTopBar">
     <div class="container d-flex align-items-center justify-content-between gap-2">
         <!-- Logo -->
@@ -11,148 +13,241 @@
             <i class="bi bi-search position-absolute ms-3 text-muted" style="font-size: 0.8rem; z-index:1;"></i>
             <input class="form-control search-input ps-5 w-100" type="text" name="q" placeholder="Search...">
         </form>
-        <!-- Right panel toggle -->
-        <button class="btn mobile-topbar-btn flex-shrink-0" id="rightDrawerToggle" title="Suggestions & Messages">
-            <i class="bi bi-people-fill"></i>
+        <!-- Right drawer toggle -->
+        <button class="btn mobile-topbar-btn flex-shrink-0" id="rightDrawerToggle" title="Menu">
+            <i class="bi bi-layout-sidebar-reverse"></i>
         </button>
     </div>
 </nav>
 
-<!-- RIGHT DRAWER OVERLAY (mobile) -->
+<!-- ===== RIGHT DRAWER OVERLAY ===== -->
 <div class="right-drawer-overlay d-lg-none" id="rightDrawerOverlay"></div>
 
-<!-- RIGHT DRAWER PANEL (mobile) -->
+<!-- ===== RIGHT DRAWER PANEL ===== -->
 <div class="right-drawer d-lg-none" id="rightDrawerPanel">
+    <!-- Header -->
     <div class="right-drawer-header">
-        <span class="fw-bold" style="color:var(--primary);font-size:1.1rem;letter-spacing:-0.5px;">CLiQ</span>
+        <div class="d-flex align-items-center gap-2">
+            {% if request.user.is_authenticated %}
+            {% if user_profile and user_profile.avatar %}
+            <div class="avatar-ring" style="padding:2px;">
+                <img src="{{ user_profile.avatar.url }}" width="34" height="34" class="avatar-img">
+            </div>
+            <div style="line-height:1.2;">
+                <span class="fw-bold text-dark d-block" style="font-size:0.85rem;">@{{ request.user.username }}</span>
+                <small class="text-muted" style="font-size:0.68rem;">
+                    {% if user_profile.bio %}{{ user_profile.bio|truncatechars:22 }}{% else %}CLiQ member{% endif %}
+                </small>
+            </div>
+            {% else %}
+            <span class="fw-bold" style="color:var(--primary);font-size:1.1rem;letter-spacing:-0.5px;">CLiQ</span>
+            {% endif %}
+            {% else %}
+            <span class="fw-bold" style="color:var(--primary);font-size:1.1rem;letter-spacing:-0.5px;">CLiQ</span>
+            {% endif %}
+        </div>
         <button class="btn right-drawer-close" id="rightDrawerClose">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>
+
+    <!-- Body -->
     <div class="right-drawer-body" id="rightDrawerBody">
-        <!-- Content will be injected by pages that need it -->
-        <!-- Default: show user info -->
+
+        <!-- Navigation -->
         <div class="drawer-section-label">Navigation</div>
-        <nav class="d-flex flex-column gap-1 mb-3">
-            <a href="{% url 'index' %}" class="sidebar-nav-link"><i class="bi bi-house-door-fill"></i> Home</a>
-            <a href="{% url 'settings' %}" class="sidebar-nav-link"><i class="bi bi-gear-fill"></i> Settings</a>
-            <a href="{% url 'logout' %}" class="sidebar-nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Log
-                Out</a>
+        <nav class="d-flex flex-column gap-1 mb-1">
+            <a href="{% url 'index' %}" class="sidebar-nav-link {% if current_url == 'index' %}active{% endif %}">
+                <i class="bi bi-house-door{% if current_url == 'index' %}-fill{% endif %}"></i> Home
+            </a>
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'profile' request.user.id %}"
+                class="sidebar-nav-link {% if current_url == 'profile' %}active{% endif %}">
+                <i class="bi bi-person{% if current_url == 'profile' %}-fill{% endif %}"></i> Profile
+            </a>
+            <a href="{% url 'chat' %}" class="sidebar-nav-link {% if current_url == 'chat' %}active{% endif %}">
+                <i class="bi bi-chat-dots{% if current_url == 'chat' %}-fill{% endif %}"></i> Messages
+            </a>
+            <a href="{% url 'settings' %}" class="sidebar-nav-link {% if current_url == 'settings' %}active{% endif %}">
+                <i class="bi bi-gear{% if current_url == 'settings' %}-fill{% endif %}"></i> Settings
+            </a>
+            {% endif %}
         </nav>
+
+        <!-- Extra content slot — pages can append here via JS -->
+        <div id="drawerExtraContent"></div>
+
+        <!-- Account -->
+        <div class="drawer-section-label mt-3">Account</div>
+        {% if request.user.is_authenticated %}
+        <nav class="d-flex flex-column gap-1">
+            <a href="{% url 'logout' %}" class="sidebar-nav-link text-danger">
+                <i class="bi bi-box-arrow-right"></i> Log Out
+            </a>
+        </nav>
+        {% else %}
+        <nav class="d-flex flex-column gap-1">
+            <a href="{% url 'signin' %}" class="sidebar-nav-link">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+            </a>
+        </nav>
+        {% endif %}
+
+        <p class="text-muted text-center mt-4 mb-1" style="font-size:0.65rem;">© 2026 CLiQ — Social Media App</p>
     </div>
 </div>
 
-<!-- MOBILE BOTTOM NAV -->
+<!-- ===== MOBILE BOTTOM NAV ===== -->
 <nav class="mobile-bottom-nav d-lg-none" id="mobileBottomNav">
-    <a href="{% url 'index' %}"
-        class="mobile-nav-item {% if request.resolver_match.url_name == 'index' %}active{% endif %}" id="mbnHome">
-        <i class="bi bi-house-door{% if request.resolver_match.url_name == 'index' %}-fill{% endif %}"></i>
+    <!-- Home -->
+    <a href="{% url 'index' %}" class="mobile-nav-item {% if current_url == 'index' %}active{% endif %}" id="mbnHome">
+        <i class="bi bi-house-door{% if current_url == 'index' %}-fill{% endif %}"></i>
         <span>Home</span>
     </a>
+
+    <!-- Profile -->
     {% if request.user.is_authenticated %}
     <a href="{% url 'profile' request.user.id %}"
-        class="mobile-nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" id="mbnProfile">
-        <i class="bi bi-person{% if request.resolver_match.url_name == 'profile' %}-fill{% endif %}"></i>
+        class="mobile-nav-item {% if current_url == 'profile' %}active{% endif %}" id="mbnProfile">
+        <i class="bi bi-person{% if current_url == 'profile' %}-fill{% endif %}"></i>
         <span>Profile</span>
     </a>
     {% endif %}
-    <!-- New Post FAB -->
+
+    <!-- FAB: New Post -->
     <button class="mobile-nav-fab" id="mobileNewPostBtn" title="New Post">
         <i class="bi bi-plus-lg"></i>
     </button>
+
+    <!-- Messages -->
     <a href="{% url 'chat' %}"
-        class="mobile-nav-item {% if request.resolver_match.url_name == 'chat' %}active{% endif %}" id="mbnChat">
-        <i class="bi bi-chat-dots{% if request.resolver_match.url_name == 'chat' %}-fill{% endif %}"></i>
+        class="mobile-nav-item {% if current_url == 'chat' or current_url == 'chat-user' %}active{% endif %}"
+        id="mbnChat">
+        <i class="bi bi-chat-dots{% if current_url == 'chat' or current_url == 'chat-user' %}-fill{% endif %}"></i>
         <span>Messages</span>
     </a>
-    <button class="mobile-nav-item" id="mbnRight" onclick="openRightDrawer()">
-        <i class="bi bi-grid-3x3"></i>
+
+    <!-- More (opens right drawer) -->
+    <button class="mobile-nav-item" id="mbnMore" onclick="openRightDrawer()">
+        <i class="bi bi-grid-3x3{% if current_url == 'settings' %}-gap-fill{% endif %}"></i>
         <span>More</span>
     </button>
 </nav>
 
-<!-- MOBILE NEW POST MODAL -->
+<!-- ===== NEW POST BOTTOM SHEET ===== -->
+{% if request.user.is_authenticated %}
 <div class="mobile-post-overlay d-lg-none" id="mobilePostOverlay"></div>
 <div class="mobile-post-sheet d-lg-none" id="mobilePostSheet">
     <div class="mobile-sheet-handle"></div>
     <div class="mobile-sheet-header">
-        <span class="fw-bold fs-6">Create Post</span>
-        <button class="btn p-0" id="mobilePostClose"><i class="bi bi-x-lg text-muted"></i></button>
+        <span class="fw-bold fs-6">✨ Create Post</span>
+        <button class="btn p-0" id="mobilePostClose">
+            <i class="bi bi-x-lg text-muted"></i>
+        </button>
     </div>
-    <div class="p-3">
+    <div class="p-3 pb-5">
         <form action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
+            <!-- Image upload area -->
             <div class="mb-3">
-                <label for="mobile_image_upload" class="form-label d-block text-center p-4 rounded-3 position-relative"
-                    style="border:2px dashed #c7d2fe;cursor:pointer;background:rgba(99,102,241,0.04);transition:0.3s;">
-                    <i class="bi bi-image fs-3 text-primary d-block mb-1"></i>
-                    <small class="text-muted fw-medium">Tap to upload image</small>
-                    <button type="button" class="btn btn-close position-absolute top-0 end-0 m-1 clear-image-mobile"
+                <label for="mobile_image_upload"
+                    class="form-label d-block text-center p-4 rounded-3 position-relative mobile-upload-label">
+                    <i class="bi bi-image fs-2 text-primary d-block mb-2" id="uploadIcon"></i>
+                    <span class="text-muted fw-medium d-block" id="uploadText">Tap to upload image</span>
+                    <button type="button" class="btn btn-close position-absolute top-0 end-0 m-2 clear-image-mobile"
                         style="display:none;"></button>
                 </label>
-                <input type="file" name="image_upload" id="mobile_image_upload"
-                    class="form-control form-control-sm rounded-3" style="display:none;" accept="image/*">
+                <input type="file" name="image_upload" id="mobile_image_upload" style="display:none;" accept="image/*">
             </div>
+            <!-- Caption -->
             <div class="mb-3">
                 <textarea name="caption" class="form-control rounded-3" rows="3"
                     placeholder="Write a caption..."></textarea>
             </div>
-            <button type="submit" class="btn btn-modern w-100">Share</button>
+            <button type="submit" class="btn btn-modern w-100">
+                <i class="bi bi-send-fill me-2"></i>Share
+            </button>
         </form>
     </div>
 </div>
+{% endif %}
 
 <script>
-    // ===== RIGHT DRAWER =====
-    function openRightDrawer() {
-        $('#rightDrawerPanel').addClass('open');
-        $('#rightDrawerOverlay').addClass('open');
-        $('body').addClass('drawer-open');
-    }
-    function closeRightDrawer() {
-        $('#rightDrawerPanel').removeClass('open');
-        $('#rightDrawerOverlay').removeClass('open');
-        $('body').removeClass('drawer-open');
-    }
-    $(document).ready(function () {
-        $('#rightDrawerToggle').on('click', openRightDrawer);
-        $('#rightDrawerClose, #rightDrawerOverlay').on('click', closeRightDrawer);
+    (function () {
+        // ===== RIGHT DRAWER =====
+        window.openRightDrawer = function () {
+            document.getElementById('rightDrawerPanel').classList.add('open');
+            document.getElementById('rightDrawerOverlay').classList.add('open');
+            document.body.classList.add('drawer-open');
+        };
+        function closeRightDrawer() {
+            document.getElementById('rightDrawerPanel').classList.remove('open');
+            document.getElementById('rightDrawerOverlay').classList.remove('open');
+            document.body.classList.remove('drawer-open');
+        }
+
+        document.getElementById('rightDrawerToggle').addEventListener('click', openRightDrawer);
+        document.getElementById('rightDrawerClose').addEventListener('click', closeRightDrawer);
+        document.getElementById('rightDrawerOverlay').addEventListener('click', closeRightDrawer);
 
         // ===== NEW POST BOTTOM SHEET =====
-        $('#mobileNewPostBtn').on('click', function () {
-            $('#mobilePostSheet').addClass('open');
-            $('#mobilePostOverlay').addClass('open');
-            $('body').addClass('sheet-open');
-        });
-        function closePostSheet() {
-            $('#mobilePostSheet').removeClass('open');
-            $('#mobilePostOverlay').removeClass('open');
-            $('body').removeClass('sheet-open');
-        }
-        $('#mobilePostClose, #mobilePostOverlay').on('click', closePostSheet);
+        {% if request.user.is_authenticated %}
+        var postSheet = document.getElementById('mobilePostSheet');
+        var postOverlay = document.getElementById('mobilePostOverlay');
 
-        // Mobile image upload preview
-        $('#mobile_image_upload').on('change', function () {
-            var fileName = $(this).val().split('\\').pop();
-            var label = $(this).prev('label');
-            if (fileName) {
-                label.html(
-                    '<i class="bi bi-check-circle fs-3 text-success d-block mb-1"></i>' +
-                    '<small class="text-success fw-bold">' + fileName + '</small>' +
-                    '<button type="button" class="btn btn-close position-absolute top-0 end-0 m-1 clear-image-mobile"></button>'
-                );
+        function openPostSheet() {
+            if (postSheet) postSheet.classList.add('open');
+            if (postOverlay) postOverlay.classList.add('open');
+            document.body.classList.add('sheet-open');
+        }
+        function closePostSheet() {
+            if (postSheet) postSheet.classList.remove('open');
+            if (postOverlay) postOverlay.classList.remove('open');
+            document.body.classList.remove('sheet-open');
+        }
+
+        var fabBtn = document.getElementById('mobileNewPostBtn');
+        if (fabBtn) fabBtn.addEventListener('click', openPostSheet);
+
+        var closeBtn = document.getElementById('mobilePostClose');
+        if (closeBtn) closeBtn.addEventListener('click', closePostSheet);
+        if (postOverlay) postOverlay.addEventListener('click', closePostSheet);
+
+        // Image upload preview
+        var mobileUpload = document.getElementById('mobile_image_upload');
+        if (mobileUpload) {
+            mobileUpload.addEventListener('change', function () {
+                var fileName = this.value.split('\\').pop();
+                if (fileName) {
+                    document.getElementById('uploadIcon').className = 'bi bi-check-circle fs-2 text-success d-block mb-2';
+                    document.getElementById('uploadText').textContent = fileName;
+                    document.querySelector('.clear-image-mobile').style.display = '';
+                }
+            });
+        }
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('clear-image-mobile')) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (mobileUpload) mobileUpload.value = '';
+                var icon = document.getElementById('uploadIcon');
+                var text = document.getElementById('uploadText');
+                if (icon) icon.className = 'bi bi-image fs-2 text-primary d-block mb-2';
+                if (text) text.textContent = 'Tap to upload image';
+                document.querySelector('.clear-image-mobile').style.display = 'none';
             }
         });
-        $(document).on('click', '.clear-image-mobile', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $('#mobile_image_upload').val('');
-            var label = $('#mobile_image_upload').prev('label');
-            label.html(
-                '<i class="bi bi-image fs-3 text-primary d-block mb-1"></i>' +
-                '<small class="text-muted fw-medium">Tap to upload image</small>' +
-                '<button type="button" class="btn btn-close position-absolute top-0 end-0 m-1 clear-image-mobile" style="display:none;"></button>'
-            );
+        {% endif %}
+
+        // ===== INJECT EXTRA DRAWER CONTENT (if page defines it) =====
+        document.addEventListener('DOMContentLoaded', function () {
+            var extra = document.getElementById('mobileDrawerContent');
+            var slot = document.getElementById('drawerExtraContent');
+            if (extra && slot) {
+                slot.innerHTML = extra.innerHTML;
+            }
         });
-    });
+    })();
 </script>
+
+{% endwith %}
