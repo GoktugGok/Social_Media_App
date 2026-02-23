@@ -1,14 +1,158 @@
 {% load static %}
-<!-- Minimal top bar: only logo + search -->
-<nav class="modern-nav py-2 d-flex d-lg-none">
-    <div class="container d-flex align-items-center justify-content-between">
-        <a href="{% url 'index' %}" class="text-decoration-none">
+<!-- MOBILE TOP BAR (only on mobile) -->
+<nav class="modern-nav py-2 d-flex d-lg-none" id="mobileTopBar">
+    <div class="container d-flex align-items-center justify-content-between gap-2">
+        <!-- Logo -->
+        <a href="{% url 'index' %}" class="text-decoration-none flex-shrink-0">
             <h4 class="m-0 fw-bold" style="color: var(--primary); letter-spacing: -0.5px;">CLiQ</h4>
         </a>
-        <form action="{% url 'search' %}" class="d-flex align-items-center position-relative">
-            <i class="bi bi-search position-absolute ms-3 text-muted" style="font-size: 0.8rem;"></i>
-            <input class="form-control search-input ps-5" type="text" name="q" placeholder="Search..."
-                style="width:200px;">
+        <!-- Search -->
+        <form action="{% url 'search' %}" class="d-flex align-items-center position-relative flex-grow-1">
+            <i class="bi bi-search position-absolute ms-3 text-muted" style="font-size: 0.8rem; z-index:1;"></i>
+            <input class="form-control search-input ps-5 w-100" type="text" name="q" placeholder="Search...">
         </form>
+        <!-- Right panel toggle -->
+        <button class="btn mobile-topbar-btn flex-shrink-0" id="rightDrawerToggle" title="Suggestions & Messages">
+            <i class="bi bi-people-fill"></i>
+        </button>
     </div>
 </nav>
+
+<!-- RIGHT DRAWER OVERLAY (mobile) -->
+<div class="right-drawer-overlay d-lg-none" id="rightDrawerOverlay"></div>
+
+<!-- RIGHT DRAWER PANEL (mobile) -->
+<div class="right-drawer d-lg-none" id="rightDrawerPanel">
+    <div class="right-drawer-header">
+        <span class="fw-bold" style="color:var(--primary);font-size:1.1rem;letter-spacing:-0.5px;">CLiQ</span>
+        <button class="btn right-drawer-close" id="rightDrawerClose">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div class="right-drawer-body" id="rightDrawerBody">
+        <!-- Content will be injected by pages that need it -->
+        <!-- Default: show user info -->
+        <div class="drawer-section-label">Navigation</div>
+        <nav class="d-flex flex-column gap-1 mb-3">
+            <a href="{% url 'index' %}" class="sidebar-nav-link"><i class="bi bi-house-door-fill"></i> Home</a>
+            <a href="{% url 'settings' %}" class="sidebar-nav-link"><i class="bi bi-gear-fill"></i> Settings</a>
+            <a href="{% url 'logout' %}" class="sidebar-nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Log
+                Out</a>
+        </nav>
+    </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottom-nav d-lg-none" id="mobileBottomNav">
+    <a href="{% url 'index' %}"
+        class="mobile-nav-item {% if request.resolver_match.url_name == 'index' %}active{% endif %}" id="mbnHome">
+        <i class="bi bi-house-door{% if request.resolver_match.url_name == 'index' %}-fill{% endif %}"></i>
+        <span>Home</span>
+    </a>
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'profile' request.user.id %}"
+        class="mobile-nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}" id="mbnProfile">
+        <i class="bi bi-person{% if request.resolver_match.url_name == 'profile' %}-fill{% endif %}"></i>
+        <span>Profile</span>
+    </a>
+    {% endif %}
+    <!-- New Post FAB -->
+    <button class="mobile-nav-fab" id="mobileNewPostBtn" title="New Post">
+        <i class="bi bi-plus-lg"></i>
+    </button>
+    <a href="{% url 'chat' %}"
+        class="mobile-nav-item {% if request.resolver_match.url_name == 'chat' %}active{% endif %}" id="mbnChat">
+        <i class="bi bi-chat-dots{% if request.resolver_match.url_name == 'chat' %}-fill{% endif %}"></i>
+        <span>Messages</span>
+    </a>
+    <button class="mobile-nav-item" id="mbnRight" onclick="openRightDrawer()">
+        <i class="bi bi-grid-3x3"></i>
+        <span>More</span>
+    </button>
+</nav>
+
+<!-- MOBILE NEW POST MODAL -->
+<div class="mobile-post-overlay d-lg-none" id="mobilePostOverlay"></div>
+<div class="mobile-post-sheet d-lg-none" id="mobilePostSheet">
+    <div class="mobile-sheet-handle"></div>
+    <div class="mobile-sheet-header">
+        <span class="fw-bold fs-6">Create Post</span>
+        <button class="btn p-0" id="mobilePostClose"><i class="bi bi-x-lg text-muted"></i></button>
+    </div>
+    <div class="p-3">
+        <form action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="mobile_image_upload" class="form-label d-block text-center p-4 rounded-3 position-relative"
+                    style="border:2px dashed #c7d2fe;cursor:pointer;background:rgba(99,102,241,0.04);transition:0.3s;">
+                    <i class="bi bi-image fs-3 text-primary d-block mb-1"></i>
+                    <small class="text-muted fw-medium">Tap to upload image</small>
+                    <button type="button" class="btn btn-close position-absolute top-0 end-0 m-1 clear-image-mobile"
+                        style="display:none;"></button>
+                </label>
+                <input type="file" name="image_upload" id="mobile_image_upload"
+                    class="form-control form-control-sm rounded-3" style="display:none;" accept="image/*">
+            </div>
+            <div class="mb-3">
+                <textarea name="caption" class="form-control rounded-3" rows="3"
+                    placeholder="Write a caption..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-modern w-100">Share</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ===== RIGHT DRAWER =====
+    function openRightDrawer() {
+        $('#rightDrawerPanel').addClass('open');
+        $('#rightDrawerOverlay').addClass('open');
+        $('body').addClass('drawer-open');
+    }
+    function closeRightDrawer() {
+        $('#rightDrawerPanel').removeClass('open');
+        $('#rightDrawerOverlay').removeClass('open');
+        $('body').removeClass('drawer-open');
+    }
+    $(document).ready(function () {
+        $('#rightDrawerToggle').on('click', openRightDrawer);
+        $('#rightDrawerClose, #rightDrawerOverlay').on('click', closeRightDrawer);
+
+        // ===== NEW POST BOTTOM SHEET =====
+        $('#mobileNewPostBtn').on('click', function () {
+            $('#mobilePostSheet').addClass('open');
+            $('#mobilePostOverlay').addClass('open');
+            $('body').addClass('sheet-open');
+        });
+        function closePostSheet() {
+            $('#mobilePostSheet').removeClass('open');
+            $('#mobilePostOverlay').removeClass('open');
+            $('body').removeClass('sheet-open');
+        }
+        $('#mobilePostClose, #mobilePostOverlay').on('click', closePostSheet);
+
+        // Mobile image upload preview
+        $('#mobile_image_upload').on('change', function () {
+            var fileName = $(this).val().split('\\').pop();
+            var label = $(this).prev('label');
+            if (fileName) {
+                label.html(
+                    '<i class="bi bi-check-circle fs-3 text-success d-block mb-1"></i>' +
+                    '<small class="text-success fw-bold">' + fileName + '</small>' +
+                    '<button type="button" class="btn btn-close position-absolute top-0 end-0 m-1 clear-image-mobile"></button>'
+                );
+            }
+        });
+        $(document).on('click', '.clear-image-mobile', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#mobile_image_upload').val('');
+            var label = $('#mobile_image_upload').prev('label');
+            label.html(
+                '<i class="bi bi-image fs-3 text-primary d-block mb-1"></i>' +
+                '<small class="text-muted fw-medium">Tap to upload image</small>' +
+                '<button type="button" class="btn btn-close position-absolute top-0 end-0 m-1 clear-image-mobile" style="display:none;"></button>'
+            );
+        });
+    });
+</script>

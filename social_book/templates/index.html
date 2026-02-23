@@ -55,13 +55,15 @@
                     <form action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="image_upload" class="form-label d-block text-center p-3 rounded-3 position-relative" 
+                            <label for="image_upload"
+                                class="form-label d-block text-center p-3 rounded-3 position-relative"
                                 style="border:2px dashed #ccc;cursor:pointer;background-color:#f8f9fa;transition:0.3s;">
                                 <i class="bi bi-image fs-4 text-primary d-block mb-1"></i>
                                 <small class="text-muted">Click to upload image</small>
-                                <button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image" style="display:none;"></button>
+                                <button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image"
+                                    style="display:none;"></button>
                             </label>
-                            <input type="file" name="image_upload" id="image_upload" 
+                            <input type="file" name="image_upload" id="image_upload"
                                 class="form-control form-control-sm rounded-3" style="display:none;" accept="image/*">
                         </div>
                         <div class="mb-3"><textarea name="caption" class="form-control rounded-3" rows="3"
@@ -188,7 +190,8 @@
                         class="form-control form-control-sm border-0 bg-light rounded-pill px-3 comment-input"
                         placeholder="Add a comment..." autocomplete="off">
                     <button type="submit" class="btn p-2 ms-2 border-0 text-primary"
-                        style="font-size:0.95rem;background:transparent;transition:0.2s;display:flex;align-items:center;justify-content:center;"><i class="bi bi-send-fill"></i></button>
+                        style="font-size:0.95rem;background:transparent;transition:0.2s;display:flex;align-items:center;justify-content:center;"><i
+                            class="bi bi-send-fill"></i></button>
                 </form>
             </div>
         </article>
@@ -229,29 +232,30 @@
                 <h6 class="fw-semibold text-muted mb-4"
                     style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;">Direct Messages</h6>
                 {% if karsilikli_takipci %}
-                    {% for user in karsilikli_takipci %}
-                    <div class="d-flex align-items-center justify-content-between mb-3 position-relative">
-                        <div class="d-flex align-items-center gap-2">
-                            <img src="{{ user.avatar.url }}" width="34" height="34"
-                                class="rounded-circle flex-shrink-0" style="object-fit:cover;">
-                            <div style="line-height:1.25;overflow:hidden;max-width:105px;">
-                                <a href="{% url 'profile' user.id %}"
-                                    class="text-decoration-none text-dark fw-bold small d-block text-truncate">
-                                    @{{ user.username }}
-                                </a>
-                            </div>
+                {% for user in karsilikli_takipci %}
+                <div class="d-flex align-items-center justify-content-between mb-3 position-relative">
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="{{ user.avatar.url }}" width="34" height="34" class="rounded-circle flex-shrink-0"
+                            style="object-fit:cover;">
+                        <div style="line-height:1.25;overflow:hidden;max-width:105px;">
+                            <a href="{% url 'profile' user.id %}"
+                                class="text-decoration-none text-dark fw-bold small d-block text-truncate">
+                                @{{ user.username }}
+                            </a>
                         </div>
-                        {% if user.unread_count > 0 %}
-                        <span class="badge bg-danger position-absolute top-0 end-0" style="font-size:0.65rem;">{{ user.unread_count }}</span>
-                        {% endif %}
-                        <a href="{% url 'chat-user' user.id %}" class="btn btn-outline-modern btn-sm py-0 px-2"
-                            style="font-size:0.76rem;" title="Send Message">
-                            <i class="bi bi-chat-dots-fill"></i>
-                        </a>
                     </div>
-                    {% endfor %}
+                    {% if user.unread_count > 0 %}
+                    <span class="badge bg-danger position-absolute top-0 end-0" style="font-size:0.65rem;">{{
+                        user.unread_count }}</span>
+                    {% endif %}
+                    <a href="{% url 'chat-user' user.id %}" class="btn btn-outline-modern btn-sm py-0 px-2"
+                        style="font-size:0.76rem;" title="Send Message">
+                        <i class="bi bi-chat-dots-fill"></i>
+                    </a>
+                </div>
+                {% endfor %}
                 {% else %}
-                    <p class="text-muted small text-center mb-0">No mutual followers yet</p>
+                <p class="text-muted small text-center mb-0">No mutual followers yet</p>
                 {% endif %}
                 <hr class="my-3 opacity-25">
             </div>
@@ -264,10 +268,78 @@
 
 </div>
 
+<!-- Inject right sidebar content into mobile drawer -->
+<div id="mobileDrawerContent" style="display:none;">
+    <div class="drawer-section-label">Suggested For You</div>
+    {% for item in takip_etmediklerim %}
+    <div class="mobile-drawer-user-row">
+        <div class="d-flex align-items-center gap-2 flex-grow-1">
+            <img src="{{ item.kullanici.avatar.url }}" width="38" height="38" class="rounded-circle flex-shrink-0"
+                style="object-fit:cover;">
+            <div style="line-height:1.25;overflow:hidden;">
+                <a href="{% url 'profile' item.kullanici.id %}"
+                    class="text-decoration-none text-dark fw-bold small d-block text-truncate">
+                    @{{ item.kullanici.username }}
+                </a>
+                <small class="text-muted" style="font-size:0.68rem;">{{ item.takipci_sayisi }} followers</small>
+            </div>
+        </div>
+        <a href="{% url 'follow' item.kullanici.id %}" class="btn btn-outline-modern btn-sm py-0 px-3"
+            style="font-size:0.76rem;">Follow</a>
+    </div>
+    {% empty %}
+    <p class="text-muted small text-center py-2">No suggestions yet</p>
+    {% endfor %}
+
+    <div class="drawer-section-label mt-3">Direct Messages</div>
+    {% if karsilikli_takipci %}
+    {% for user in karsilikli_takipci %}
+    <div class="mobile-drawer-user-row position-relative">
+        <div class="d-flex align-items-center gap-2 flex-grow-1">
+            <img src="{{ user.avatar.url }}" width="38" height="38" class="rounded-circle flex-shrink-0"
+                style="object-fit:cover;">
+            <a href="{% url 'profile' user.id %}" class="text-decoration-none text-dark fw-bold small text-truncate">
+                @{{ user.username }}
+            </a>
+            {% if user.unread_count > 0 %}
+            <span class="badge bg-danger" style="font-size:0.62rem;">{{ user.unread_count }}</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'chat-user' user.id %}" class="btn btn-outline-modern btn-sm py-0 px-2"
+            style="font-size:0.76rem;" title="Send Message">
+            <i class="bi bi-chat-dots-fill"></i>
+        </a>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-muted small text-center py-2">No mutual followers yet</p>
+    {% endif %}
+
+    <div class="drawer-section-label mt-3">Account</div>
+    <nav class="d-flex flex-column gap-1">
+        <a href="{% url 'settings' %}" class="sidebar-nav-link"><i class="bi bi-gear-fill"></i> Settings</a>
+        <a href="{% url 'logout' %}" class="sidebar-nav-link text-danger"><i class="bi bi-box-arrow-right"></i> Log
+            Out</a>
+    </nav>
+    <p class="text-muted text-center mt-4 mb-1" style="font-size:0.65rem;">© 2026 CLiQ — Social Media App</p>
+</div>
+
 <script>
     $(document).ready(function () {
+        // Inject right sidebar content into mobile drawer
+        var drawerContent = $('#mobileDrawerContent').html();
+        if (drawerContent && $(window).width() < 992) {
+            $('#rightDrawerBody').html(drawerContent);
+        }
+        $(window).on('resize', function () {
+            var content = $('#mobileDrawerContent').html();
+            if (content && $(window).width() < 992) {
+                $('#rightDrawerBody').html(content);
+            }
+        });
+
         // File upload preview
-        $('#image_upload').on('change', function() {
+        $('#image_upload').on('change', function () {
             var fileName = $(this).val().split('\\').pop();
             var label = $(this).prev('label');
             if (fileName) {
@@ -281,7 +353,7 @@
         });
 
         // Clear selected image
-        $(document).on('click', '.clear-image', function(e) {
+        $(document).on('click', '.clear-image', function (e) {
             e.preventDefault();
             e.stopPropagation();
             $('#image_upload').val('');
