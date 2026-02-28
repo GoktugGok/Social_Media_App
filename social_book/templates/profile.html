@@ -48,8 +48,8 @@
           </div>
           {% if request.user.id != user_id.id %}
           <a href="{% url 'follow' user_id.id %}"
-            class="{% if follow_filter %}btn btn-modern{% else %}btn btn-outline-modern{% endif %}"
-            style="border-color:#fff;color:{% if follow_filter %}#fff{% else %}#fff{% endif %};">
+            class="btn {% if follow_filter %}btn-modern{% else %}btn-outline-modern{% endif %}"
+            style="border-color:#fff; color:#fff;">
             {% if follow_filter %}
             Following
             {% else %}
@@ -74,30 +74,31 @@
     <!-- Update post button -->
     {% if request.user == user_id %}
     <div class="dropdown mb-2">
-                <button class="btn btn-modern w-25 d-flex align-items-center justify-content-center gap-2"
-                    type="button" data-bs-toggle="dropdown" data-bs-auto-close="false">
-                    <i class="bi bi-plus-circle-fill"></i> New Post
-                </button>
-                <div class="dropdown-menu p-3 modern-card mt-2 shadow-lg" style="width:280px;border:none;">
-                    <h6 class="fw-bold mb-3">Create New Post</h6>
-                    <form action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="image_upload" class="form-label d-block text-center p-3 rounded-3 position-relative" 
-                                style="border:2px dashed #ccc;cursor:pointer;background-color:#f8f9fa;transition:0.3s;">
-                                <i class="bi bi-image fs-4 text-primary d-block mb-1"></i>
-                                <small class="text-muted">Click to upload image</small>
-                                <button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image" style="display:none;"></button>
-                            </label>
-                            <input type="file" name="image_upload" id="image_upload" 
-                                class="form-control form-control-sm rounded-3" style="display:none;" accept="image/*">
-                        </div>
-                        <div class="mb-3"><textarea name="caption" class="form-control rounded-3" rows="3"
-                                placeholder="Write a caption..."></textarea></div>
-                        <button type="submit" class="btn btn-modern w-100">Share</button>
-                    </form>
-                </div>
-            </div>
+      <button class="btn btn-modern w-25 d-flex align-items-center justify-content-center gap-2" type="button"
+        data-bs-toggle="dropdown" data-bs-auto-close="false">
+        <i class="bi bi-plus-circle-fill"></i> New Post
+      </button>
+      <div class="dropdown-menu p-3 modern-card mt-2 shadow-lg" style="width:280px;border:none;">
+        <h6 class="fw-bold mb-3">Create New Post</h6>
+        <form action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="image_upload" class="form-label d-block text-center p-3 rounded-3 position-relative"
+              style="border:2px dashed #ccc;cursor:pointer;background-color:#f8f9fa;transition:0.3s;">
+              <i class="bi bi-image fs-4 text-primary d-block mb-1"></i>
+              <small class="text-muted">Click to upload image</small>
+              <button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image"
+                style="display:none;"></button>
+            </label>
+            <input type="file" name="image_upload" id="image_upload" class="form-control form-control-sm rounded-3"
+              style="display:none;" accept="image/*">
+          </div>
+          <div class="mb-3"><textarea name="caption" class="form-control rounded-3" rows="3"
+              placeholder="Write a caption..."></textarea></div>
+          <button type="submit" class="btn btn-modern w-100">Share</button>
+        </form>
+      </div>
+    </div>
     {% else %}
     <h6 class="fw-bold mb-4">Posts</h6>
     {% endif %}
@@ -115,8 +116,11 @@
             <div class="d-flex align-items-center justify-content-between mt-2">
               <span class="small fw-bold"><i class="bi bi-heart-fill text-danger me-1"></i>
                 {{user_post.people_who_liked.all.count }}</span>
-              {% if request.user == user_post.user %}<a href="{% url 'post-delete' user_post.id %}"
-                class="btn btn-link text-danger p-0" style="font-size:0.8rem;"><i class="bi bi-trash3"></i></a>
+              {% if request.user == user_post.user %}
+              <a href="#" class="btn btn-link text-danger p-0 postDelete" data-post-id="{{ user_post.id }}"
+                style="font-size:0.8rem;">
+                <i class="bi bi-trash3"></i>
+              </a>
               {% endif %}
             </div>
           </div>
@@ -162,32 +166,48 @@
 </style>
 <script>
   $(document).ready(function () {
-        // File upload preview
-        $('#image_upload').on('change', function() {
-            var fileName = $(this).val().split('\\').pop();
-            var label = $(this).prev('label');
-            if (fileName) {
-                label.html(
-                    '<i class="bi bi-check-circle fs-4 text-success d-block mb-1"></i>' +
-                    '<small class="text-success fw-bold">' + fileName + '</small>' +
-                    '<button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image"></button>'
-                );
-                label.find('.clear-image').show();
-            }
-        });
+    // File upload preview
+    $('#image_upload').on('change', function () {
+      var fileName = $(this).val().split('\\').pop();
+      var label = $(this).prev('label');
+      if (fileName) {
+        label.html(
+          '<i class="bi bi-check-circle fs-4 text-success d-block mb-1"></i>' +
+          '<small class="text-success fw-bold">' + fileName + '</small>' +
+          '<button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image"></button>'
+        );
+        label.find('.clear-image').show();
+      }
+    });
 
-        // Clear selected image
-        $(document).on('click', '.clear-image', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $('#image_upload').val('');
-            var label = $('#image_upload').prev('label');
-            label.html(
-                '<i class="bi bi-image fs-4 text-primary d-block mb-1"></i>' +
-                '<small class="text-muted">Click to upload image</small>' +
-                '<button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image" style="display:none;"></button>'
-            );
-        });
+    // Clear selected image
+    $(document).on('click', '.clear-image', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $('#image_upload').val('');
+      var label = $('#image_upload').prev('label');
+      label.html(
+        '<i class="bi bi-image fs-4 text-primary d-block mb-1"></i>' +
+        '<small class="text-muted">Click to upload image</small>' +
+        '<button type="button" class="btn btn-close position-absolute top-0 end-0 clear-image" style="display:none;"></button>'
+      );
+    });
+
+
+    // AJAX Post Delete
+    $(document).on("click", ".postDelete", function (e) {
+      e.preventDefault();
+      var postId = $(this).data("post-id");
+      var postCard = $(this).closest('.col-md-6'); // Postun bulunduğu sütunu seçiyoruz
+      if (!confirm("Delete this post?")) return;
+      $.get("{% url 'post-delete' 0 %}".replace('0', postId), function (data) {
+        if (data.success) {
+          postCard.fadeOut(350, function () { $(this).remove(); });
+        } else {
+          alert(data.error || "Could not delete post.");
+        }
       });
+    });
+  });
 </script>
 {% endblock %}

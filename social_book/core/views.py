@@ -4,9 +4,8 @@ from django.contrib.auth import authenticate , login, logout
 from django.db.models import Q
 from .models import Post , Users ,LikePost ,Follow, CommentPost, Chats
 from django.contrib.auth.decorators import login_required
-from uuid import UUID
-from django.contrib import messages
 from django.http import JsonResponse
+from django.contrib import messages
 # Create your views here.
 
 @login_required(login_url='signin')

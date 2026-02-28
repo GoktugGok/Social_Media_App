@@ -410,11 +410,15 @@
                         var container = document.getElementById("comment-container-root-" + postId);
                         $(container).append(html);
                         container.scrollTop = container.scrollHeight;
-                    } else { alert(data.error || "Could not post comment."); }
+                    } else {
+                        alert(data.error || "Could not post comment.");
+                    }
                 },
                 error: function () { alert("Error. Please try again."); }
             });
         });
+
+
         $(document).on("click", ".commentDelete", function (e) {
             e.preventDefault();
             var btn = $(this);
