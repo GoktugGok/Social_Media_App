@@ -245,8 +245,7 @@
                         </div>
                     </div>
                     {% if user.unread_count > 0 %}
-                    <span class="badge bg-danger position-absolute top-0 end-0" style="font-size:0.65rem;">{{
-                        user.unread_count }}</span>
+                    <span class="badge bg-danger position-absolute top-0 end-0" style="font-size:0.65rem;">{{ user.unread_count }}</span>
                     {% endif %}
                     <a href="{% url 'chat-user' user.id %}" class="btn btn-outline-modern btn-sm py-0 px-2"
                         style="font-size:0.76rem;" title="Send Message">
@@ -302,7 +301,9 @@
                 @{{ user.username }}
             </a>
             {% if user.unread_count > 0 %}
-            <span class="badge bg-danger" style="font-size:0.62rem;">{{ user.unread_count }}</span>
+            <span class="badge bg-danger" style="font-size:0.62rem;">
+                {{ user.unread_count }}
+            </span>
             {% endif %}
         </div>
         <a href="{% url 'chat-user' user.id %}" class="btn btn-outline-modern btn-sm py-0 px-2"
