@@ -20,8 +20,8 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 # ===== CSRF =====
 CSRF_TRUSTED_ORIGINS = [
-    'https://cliq-v0o1.onrender.com',
-    'https://*.onrender.com',
+    'https://cliqq.up.railway.app', 
+    'https://*.railway.app',
 ]
 
 # Application definition
